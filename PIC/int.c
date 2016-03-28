@@ -105,7 +105,7 @@ void InterruptVectorL(void)
     //************************************************
 
     if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
-        (PIR1bits.SSPIF == 1)) // Check I2C interrupt	(bit3)
+        (PIR1bits.SSPIF == 1 && PIE1bits.SSP1IE)) // Check I2C interrupt	(bit3)
     {
         I2C_INT();
     }
