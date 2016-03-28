@@ -46,13 +46,12 @@
 #include "user.h"
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
+#include "sensors/FXLS8471Q.h"
 
 
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
-
-EventMaskType TASK_Main_event;
 
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
@@ -60,6 +59,11 @@ EventMaskType TASK_Main_event;
 
 TASK(TASK_Main)
 {
+    #ifdef DEBUG
+	Printf("\r\nTiltDetector initialisation ...\r\n");
+	#endif
+    
+    fxls8471q_init();
     
     while(1){
         ;
