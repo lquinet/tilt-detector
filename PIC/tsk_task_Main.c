@@ -46,21 +46,31 @@
 #include "user.h"
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
+#include "NDEF/NDEFMessage.h"
+#include "NDEF/NDEFRecord.h"
+#include "Sensors/M24LR04E_R.h"
 
 
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
-
-EventMaskType TASK_Main_event;
-
+char StrTempNdefMessage[0xFF];
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
  **********************************************************************/
 
 TASK(TASK_Main)
 {
+    char str[30]="Test: est-ce que ça marche??";
+    I2C_message_t My_I2C_Message;
+    // On commence à écrire dans l'e²p à partir de l'adresse 0
+    IntTo8_t ReadAddr = 0x0000;
     
+    // @LOIC: sert à mettre toute la chaine de caract. StrTempNdefMessage à 0
+    memset(StrTempNdefMessage, 0, sizeof (StrTempNdefMessage));
+    NdefMessageAddTextRecord(str, "en");
+    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, ReadAddr);
+
     while(1){
         ;
     }
