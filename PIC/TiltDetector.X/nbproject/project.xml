@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>TiltDetector</name>
+            <name>TiltDetector_develop_eeprom</name>
             <creation-uuid>e53f8c42-2efb-42a8-ae0d-b2ad5d1f10df</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>

@@ -45,17 +45,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../int.c ../taskdesc.c ../main.c ../tsk_task_Main.c ../Kernel/int_man.c ../drivers/drv_i2c.c ../drivers/drv_rs.c
+SOURCEFILES_QUOTED_IF_SPACED=../int.c ../taskdesc.c ../main.c ../tsk_task_Main.c ../Kernel/int_man.c ../drivers/drv_i2c.c ../drivers/drv_rs.c ../Sensors/M24LR04E_R.c ../NDEF/NDEFMessage.c ../NDEF/NDEFRecord.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1472/int.o ${OBJECTDIR}/_ext/1472/taskdesc.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/tsk_task_Main.o ${OBJECTDIR}/_ext/1966662772/int_man.o ${OBJECTDIR}/_ext/239857660/drv_i2c.o ${OBJECTDIR}/_ext/239857660/drv_rs.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1472/int.o.d ${OBJECTDIR}/_ext/1472/taskdesc.o.d ${OBJECTDIR}/_ext/1472/main.o.d ${OBJECTDIR}/_ext/1472/tsk_task_Main.o.d ${OBJECTDIR}/_ext/1966662772/int_man.o.d ${OBJECTDIR}/_ext/239857660/drv_i2c.o.d ${OBJECTDIR}/_ext/239857660/drv_rs.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1472/int.o ${OBJECTDIR}/_ext/1472/taskdesc.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/tsk_task_Main.o ${OBJECTDIR}/_ext/1966662772/int_man.o ${OBJECTDIR}/_ext/239857660/drv_i2c.o ${OBJECTDIR}/_ext/239857660/drv_rs.o ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o ${OBJECTDIR}/_ext/761765946/NDEFMessage.o ${OBJECTDIR}/_ext/761765946/NDEFRecord.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1472/int.o.d ${OBJECTDIR}/_ext/1472/taskdesc.o.d ${OBJECTDIR}/_ext/1472/main.o.d ${OBJECTDIR}/_ext/1472/tsk_task_Main.o.d ${OBJECTDIR}/_ext/1966662772/int_man.o.d ${OBJECTDIR}/_ext/239857660/drv_i2c.o.d ${OBJECTDIR}/_ext/239857660/drv_rs.o.d ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o.d ${OBJECTDIR}/_ext/761765946/NDEFMessage.o.d ${OBJECTDIR}/_ext/761765946/NDEFRecord.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1472/int.o ${OBJECTDIR}/_ext/1472/taskdesc.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/tsk_task_Main.o ${OBJECTDIR}/_ext/1966662772/int_man.o ${OBJECTDIR}/_ext/239857660/drv_i2c.o ${OBJECTDIR}/_ext/239857660/drv_rs.o
+OBJECTFILES=${OBJECTDIR}/_ext/1472/int.o ${OBJECTDIR}/_ext/1472/taskdesc.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/tsk_task_Main.o ${OBJECTDIR}/_ext/1966662772/int_man.o ${OBJECTDIR}/_ext/239857660/drv_i2c.o ${OBJECTDIR}/_ext/239857660/drv_rs.o ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o ${OBJECTDIR}/_ext/761765946/NDEFMessage.o ${OBJECTDIR}/_ext/761765946/NDEFRecord.o
 
 # Source Files
-SOURCEFILES=../int.c ../taskdesc.c ../main.c ../tsk_task_Main.c ../Kernel/int_man.c ../drivers/drv_i2c.c ../drivers/drv_rs.c
+SOURCEFILES=../int.c ../taskdesc.c ../main.c ../tsk_task_Main.c ../Kernel/int_man.c ../drivers/drv_i2c.c ../drivers/drv_rs.c ../Sensors/M24LR04E_R.c ../NDEF/NDEFMessage.c ../NDEF/NDEFRecord.c
 
 
 CFLAGS=
@@ -145,6 +145,30 @@ ${OBJECTDIR}/_ext/239857660/drv_rs.o: ../drivers/drv_rs.c  nbproject/Makefile-${
 	@${DEP_GEN} -d ${OBJECTDIR}/_ext/239857660/drv_rs.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/drv_rs.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
 	
+${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o: ../Sensors/M24LR04E_R.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1964523146" 
+	@${RM} ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o   ../Sensors/M24LR04E_R.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
+${OBJECTDIR}/_ext/761765946/NDEFMessage.o: ../NDEF/NDEFMessage.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/761765946" 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFMessage.o.d 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFMessage.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/761765946/NDEFMessage.o   ../NDEF/NDEFMessage.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/761765946/NDEFMessage.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/761765946/NDEFMessage.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
+${OBJECTDIR}/_ext/761765946/NDEFRecord.o: ../NDEF/NDEFRecord.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/761765946" 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFRecord.o.d 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFRecord.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/761765946/NDEFRecord.o   ../NDEF/NDEFRecord.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/761765946/NDEFRecord.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/761765946/NDEFRecord.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
 else
 ${OBJECTDIR}/_ext/1472/int.o: ../int.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
@@ -202,18 +226,42 @@ ${OBJECTDIR}/_ext/239857660/drv_rs.o: ../drivers/drv_rs.c  nbproject/Makefile-${
 	@${DEP_GEN} -d ${OBJECTDIR}/_ext/239857660/drv_rs.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/drv_rs.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
 	
+${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o: ../Sensors/M24LR04E_R.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1964523146" 
+	@${RM} ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o   ../Sensors/M24LR04E_R.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1964523146/M24LR04E_R.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
+${OBJECTDIR}/_ext/761765946/NDEFMessage.o: ../NDEF/NDEFMessage.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/761765946" 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFMessage.o.d 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFMessage.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/761765946/NDEFMessage.o   ../NDEF/NDEFMessage.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/761765946/NDEFMessage.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/761765946/NDEFMessage.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
+${OBJECTDIR}/_ext/761765946/NDEFRecord.o: ../NDEF/NDEFRecord.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/761765946" 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFRecord.o.d 
+	@${RM} ${OBJECTDIR}/_ext/761765946/NDEFRecord.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -p$(MP_PROCESSOR_OPTION) -oi -I"../include" -I".." -I"." -ml -oa-  -I ${MP_CC_DIR}\\..\\h  -fo ${OBJECTDIR}/_ext/761765946/NDEFRecord.o   ../NDEF/NDEFRecord.c 
+	@${DEP_GEN} -d ${OBJECTDIR}/_ext/761765946/NDEFRecord.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/761765946/NDEFRecord.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
+	
 endif
 
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: link
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk  ../Kernel/picos18.lib  
+dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk  ../Kernel/picos18.lib  ../Linker/18f46j50.lkr
 	@${MKDIR} dist/${CND_CONF}/${IMAGE_TYPE} 
-	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION_LD)  -w -x -u_DEBUG -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map" -l"../Kernel"  -z__MPLAB_BUILD=1  -u_CRUNTIME -z__MPLAB_DEBUG=1 -z__MPLAB_DEBUGGER_PK3=1 $(MP_LINKER_DEBUG_OPTION) -l ${MP_CC_DIR}\\..\\lib  -o dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}  ..\Kernel\picos18.lib 
+	${MP_LD} $(MP_EXTRA_LD_PRE) "..\Linker\18f46j50.lkr"  -p$(MP_PROCESSOR_OPTION_LD)  -w -x -u_DEBUG -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map" -l"../Kernel"  -z__MPLAB_BUILD=1  -u_CRUNTIME -z__MPLAB_DEBUG=1 -z__MPLAB_DEBUGGER_PK3=1 $(MP_LINKER_DEBUG_OPTION) -l ${MP_CC_DIR}\\..\\lib  -o dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}  ..\Kernel\picos18.lib 
 else
-dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk  ../Kernel/picos18.lib 
+dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk  ../Kernel/picos18.lib ../Linker/18f46j50.lkr
 	@${MKDIR} dist/${CND_CONF}/${IMAGE_TYPE} 
-	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION_LD)  -w  -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map" -l"../Kernel"  -z__MPLAB_BUILD=1  -u_CRUNTIME -l ${MP_CC_DIR}\\..\\lib  -o dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}  ..\Kernel\picos18.lib 
+	${MP_LD} $(MP_EXTRA_LD_PRE) "..\Linker\18f46j50.lkr"  -p$(MP_PROCESSOR_OPTION_LD)  -w  -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map" -l"../Kernel"  -z__MPLAB_BUILD=1  -u_CRUNTIME -l ${MP_CC_DIR}\\..\\lib  -o dist/${CND_CONF}/${IMAGE_TYPE}/TiltDetector.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}  ..\Kernel\picos18.lib 
 endif
 
 
