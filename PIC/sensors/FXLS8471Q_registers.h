@@ -25,10 +25,17 @@ LICENSE:
 #ifndef FXLS8471Q_REGISTERS_H
 #define	FXLS8471Q_REGISTERS_H
 
-#define FXLS8471Q_ADDRESS       0x1E<<1
+#define FXLS8471Q_ADDRESS       0x1E
+#define FXLS8471Q_DEVICE_ID     0x6A
 
-#define FXLS8471Q_WHO_AM_I      0x0D   
-#define FXLS8471Q_CTRL_REG1     0x2A    
+#define FXLS8471Q_WHO_AM_I      0x0D  
+#define FXLS8471Q_WHO_AM_I_BIT        7
+#define FXLS8471Q_WHO_AM_I_LENGTH     8
+
+#define FXLS8471Q_CTRL_REG1     0x2A   
+#define FXLS8471Q_CTRL_REG1_active_BIT     0 
+#define FXLS8471Q_CTRL_REG1_active_LENGTH  1
+
 #define FXLS8471Q_CTRL_REG2     0x2B
 #define FXLS8471Q_CTRL_REG3     0x2C
 #define FXLS8471Q_CTRL_REG4     0x2D
