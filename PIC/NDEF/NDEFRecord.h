@@ -50,11 +50,11 @@ void NdefRecordSetStatusByte(uint8_t numBytes);
 
 /**************** _NdefRecord_t: Structure of an NDEF record **********************************************************
  * @LOIC: 
- * CC = Capabylity Container
+ * CC = Capabylity Container (unused here! send at the initialization of the device!)
  * _CC_C0: CC byte 0: NDEF magic number (tag which contains NDEF message)
- * _CC_C0: CC byte 1: VNo (Version NDEF utilisé; 4.0 ici)
- * _CC_C0: CC byte 2: Tag Memory Size (Taille de la zone de données = TMS*8)
- * _CC_C0: CC byte 3: Read/Write Access (nibble 0 = accès en lecture; nibble 1 = accès en écriture)
+ * _CC_C1: CC byte 1: VNo (Version NDEF utilisé; 4.0 ici)
+ * _CC_C2: CC byte 2: Tag Memory Size (Taille de la zone de données = TMS*8)
+ * _CC_C3: CC byte 3: Read/Write Access (nibble 0 = accès en lecture; nibble 1 = accès en écriture)
  * 
  * TLV Block
  * In order to store an NDEF Message on the e²p, the message needs to be encapsulated inside a TLV Block.
@@ -78,10 +78,10 @@ void NdefRecordSetStatusByte(uint8_t numBytes);
  * @rmq2: n'utilise pas d'ID -> le type URI n'est pas utilisé
  **********************************************************************/
 typedef struct Struct_NdefRecord {
-    uint8_t _CC_C0;         //magicNumber
-    uint8_t _CC_C1;         
-    uint8_t _CC_C2;         
-    uint8_t _CC_C3;         
+  //  uint8_t _CC_C0;         //magicNumber
+  //  uint8_t _CC_C1;         
+  //  uint8_t _CC_C2;         
+  //  uint8_t _CC_C3;         
     uint8_t _TLV_Tag;       
     uint8_t _TLV_Length;    
     uint8_t _RecordHeader; 
@@ -91,7 +91,7 @@ typedef struct Struct_NdefRecord {
     uint8_t _StatusByte;    
   //  uint8_t _LanguageCode;
     uint8_t _payload[200];
-    uint8_t _Teminator[2];  // @ LOIC: Pourquoi 2 bytes??
+    uint8_t _Teminator[2];  // 2 bytes to use strcat
 
 } _NdefRecord_t, *_NdefRecord_tRef;
 

@@ -7,11 +7,6 @@ void NdefRecordConstructor(void)
 {
     //Serial.println("NdefRecord Constructor 1");
     /******************* Memory ************************/
-    // @LOIC: CC = Capabylity Container
-    NdefRecord._CC_C0 =0xE1 ;
-    NdefRecord._CC_C1 =0x40 ;
-    NdefRecord._CC_C2 =0xFF ;
-    NdefRecord._CC_C3 =0x00 ;
     // TLV Block
     // Value 0x03: Block contains an NDEF message
     NdefRecord._TLV_Tag =0x03 ;
