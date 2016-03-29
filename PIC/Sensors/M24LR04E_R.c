@@ -6,6 +6,10 @@
 //#include "tsk_task_main.h"
 
 /**********************************************************************
+ * Definition dedicated to the global variable
+ **********************************************************************/
+
+/**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
 void WaitEepResponse (void);
@@ -131,7 +135,7 @@ ErrorStatus User_GetNDEFMessage(uint8_t PayloadLength, uint8_t *NDEFmessage)
 
 StatusType M24LR04E_ReadBuffer(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t NumByteToRead, void *value)
 {
-    unsigned char pData[10]; //attention vérifier taille tableau!!!
+    unsigned char pData[80]; //attention vérifier taille tableau!!!
     unsigned char i, *ptr = (unsigned char *) value;
 
     MemMsg->control = address | 0x01;
@@ -257,21 +261,24 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
  * @return Status         E_OK if the EELC256 has been updated
  *                        E_OS_STATE if the I2C access failed
  **********************************************************************/
-StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress)
+StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address)
 
 {
+    static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
-
-    NbByteToSend = NdefRecord._TLV_Length + 7;
+    
+    // Nb Bytes To Send = the value of the TLV Length byte + the TLV Length byte +  the TLV Length byte + TLV Tag byte + Terminator TLV
+    NbByteToSend = NdefRecord._TLV_Length + 3;
+    
     MemMsg->control = address & 0xFE;
     //  High byte of addr, only used if high bit set
-    MemMsg->addr_high = subAddress.Nb8_B[1];
+    MemMsg->addr_high = lastSubAddressWrited.Nb8_B[1];
     // First register Adress
-    MemMsg->addr_low = subAddress.Nb8_B[0];
+    MemMsg->addr_low = lastSubAddressWrited.Nb8_B[0];
     // Cross the _NdefRecord_t structure to send the frame
     MemMsg->ram_data = (unsigned char *) &NdefRecord; //pData;
-    // Page write = 4 bytes max.!
-    MemMsg->num_bytes = 4;// sizeof(pData);
+    // 1 page = 4 bytes! -> subaddress must be a multiple of 4 to write 4 bytes one shot!
+    MemMsg->num_bytes = 4 - (lastSubAddressWrited.LongNb % 4);
     // 0 = single byte address, 1= two byte address
     MemMsg->flags.long_addr = 1;
     // 1 = read from external, 0 = write to external
@@ -280,9 +287,25 @@ StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address, IntT
     MemMsg->flags.SMBus = 0;
     // Attention important de reseter le flag d'erreur!!!
     MemMsg->flags.error = 0; 
-
-    for (i = 0; i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
+    
+    // First page write
+    I2C_enqMsg(MemMsg);
+    SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
+    WaitEvent(I2C_QUEUE_EMPTY);
+    ClearEvent(I2C_QUEUE_EMPTY);
+    
+    NbByteSended += MemMsg->num_bytes;
+    MemMsg->addr_low += MemMsg->num_bytes;
+    MemMsg->ram_data+= MemMsg->num_bytes;
+    if ((NbByteToSend - NbByteSended) < 4)
+        MemMsg->num_bytes = (NbByteToSend - NbByteSended);
+    else MemMsg->num_bytes = 4;
+    
+    for (i = 4 - (lastSubAddressWrited.LongNb % 4); i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
     {
+        // Wait internal writing of the e²p
+        WaitEepResponse();
+        
         // Send the message to the I2C buffer
         I2C_enqMsg(MemMsg);
         SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
@@ -294,22 +317,64 @@ StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address, IntT
             MemMsg->num_bytes = (NbByteToSend - NbByteSended);
         MemMsg->addr_low += 4;
         MemMsg->ram_data+= 4;
-        
-        // Wait internal writing of the e²p
-        WaitEepResponse();
     }
+    lastSubAddressWrited.LongNb += NbByteToSend - 1;
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
     return E_OK;
 }
 
 /**********************************************************************
- * Wait that the M24LR04E end its internal memory writing at the end of a page write
+ * Save the  Capabylity Container in M24LR04E with the values {0xE1, 0x40, 0xFF, 0x00}
+ * CC byte 0: NDEF magic number (tag which contains NDEF message)
+ * CC byte 1: VNo (Version NDEF utilisé; 4.0 ici)
+ * CC byte 2: Tag Memory Size (Taille de la zone de données = TMS*8)
+ * CC byte 3: Read/Write Access (nibble 0 = accès en lecture; nibble 1 = accès en écriture)
  *
  * @param  MemMsg    	 IN  Mandatory I2C structure
- * @param  value       	 IN  The date and time to put into the EELC256
  * @return Status         E_OK if the EELC256 has been updated
  *                        E_OS_STATE if the I2C access failed
+ **********************************************************************/
+StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
+
+{
+    // pData[0] = CC1, pData[1] = CC2, pData[2] = CC3, pData[3] = CC4
+    unsigned char pData[4] = {0xE1, 0x40, 0xFF, 0x00};
+        
+    MemMsg->control = address & 0xFE;
+    //  High byte of addr, only used if high bit set
+    MemMsg->addr_high = 0x00;
+    // First register Adress
+    MemMsg->addr_low = 0x00;
+    // The bit setting of flags.ptr_type
+    MemMsg->ram_data = pData;
+    // Must be less than 255
+    MemMsg->num_bytes = sizeof (pData)/sizeof (pData[0]);
+    // 0 = single byte address, 1= two byte address
+    MemMsg->flags.long_addr = 1;
+    // 1 = read from external, 0 = write to external
+    MemMsg->flags.i2c_read = 0;
+    // 1 = SMBbus Enabled, 0 = Disabled
+    MemMsg->flags.SMBus = 0;
+    MemMsg->flags.error = 0;
+
+    // Wait internal writing of the e²p
+    WaitEepResponse();
+    
+    I2C_enqMsg(MemMsg);
+    SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
+    WaitEvent(I2C_QUEUE_EMPTY);
+    ClearEvent(I2C_QUEUE_EMPTY);
+
+    if (MemMsg->flags.error != 0)
+        return E_OS_STATE;
+    return E_OK;
+}
+
+
+/**********************************************************************
+ * Wait that the M24LR04E end its internal memory writing at 
+ * the end of a page write
  **********************************************************************/
 
 void WaitEepResponse (void){

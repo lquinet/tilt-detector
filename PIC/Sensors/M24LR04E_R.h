@@ -43,8 +43,8 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
  * @return E_OK if the memory has been updated
  *         E_OS_STATE if the I2C access failed
  */
-StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress);
-
+StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address);
+StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address);
 #endif	/* M24LR04E_R_H */
 
 
