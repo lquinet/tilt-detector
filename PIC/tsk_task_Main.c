@@ -55,21 +55,33 @@
  * Definition dedicated to the local functions.
  **********************************************************************/
 char StrTempNdefMessage[0xFF];
+char value[80]="";
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
  **********************************************************************/
 
 TASK(TASK_Main)
 {
-    char str[30]="Test: est-ce que ça marche??";
+    char str[30] = "";
     I2C_message_t My_I2C_Message;
-    // On commence à écrire dans l'e²p à partir de l'adresse 0
-    IntTo8_t ReadAddr = 0x0000;
+    IntTo8_t subAddress;
+    subAddress.LongNb = 30;
+
+    M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
     
+    strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
     // @LOIC: sert à mettre toute la chaine de caract. StrTempNdefMessage à 0
     memset(StrTempNdefMessage, 0, sizeof (StrTempNdefMessage));
     NdefMessageAddTextRecord(str, "en");
-    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, ReadAddr);
+    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
+
+    strcpypgm2ram(str, "Best 2: Oui ca a marcher!");
+    memset(StrTempNdefMessage, 0, sizeof (StrTempNdefMessage));
+    NdefMessageAddTextRecord(str, "en");
+    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
+    
+    
+    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, subAddress, 70, value);
 
     while(1){
         ;
