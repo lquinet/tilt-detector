@@ -61,17 +61,38 @@ LICENSE:
 #define FXLS8471Q_FS_4          0x01 // +- 4g
 #define FXLS8471Q_FS_8          0x02 // +- 8g
 
+// Auto-wake sample frequency
+#define FXLS8471Q_ASPL_50       0x00 // 50Hz
+#define FXLS8471Q_ASPL_12_5     0x01 // 12.5Hz
+#define FXLS8471Q_ASPL_6_25     0x02 // 6.25Hz
+#define FXLS8471Q_ASPL_1_56     0x03 // 1.56Hz
+
+// System Output Data Rate selection
+#define FXLS8471Q_ODR_800       0x00 // 800Hz
+#define FXLS8471Q_ODR_400       0x01 // 400Hz
+#define FXLS8471Q_ODR_200       0x02 // 200Hz
+#define FXLS8471Q_ODR_100       0x03 // 100Hz
+#define FXLS8471Q_ODR_50        0x04 // 50Hz
+#define FXLS8471Q_ODR_12_5      0x05 // 12.5Hz
+#define FXLS8471Q_ODR_6_25      0x06 // 6.25Hz
+#define FXLS8471Q_ODR_1_56      0x07 // 1.5625Hz
+
+// Sleep
+#define FXLS8471Q_SLEEP_OFF     0
+#define FXLS8471Q_SLEEP_ON      1
+
+// Power Mode
+#define FXLS8471Q_PM_NORMAL     0x00 // Normal
+#define FXLS8471Q_PM_LNLP       0x01 // Low noise, low power
+#define FXLS8471Q_PM_HR         0x02 // High resolution
+#define FXLS8471Q_PM_LP         0x03 // Low Power
+
 
 /************************************************************************/
 /* Functions prototype                                                  */
 /************************************************************************/
 /**
  *  @brief   Power on and prepare for general usage.
- *  This will activate the device and take it out of sleep mode (which must be done
- *  after start-up). This function also sets both the accelerometer and the gyroscope
- *  to their most sensitive settings, namely +/- 2g and +/- 250 degrees/sec, and sets
- *  the clock source to use the X Gyro for reference, which is slightly better than
- *  the default internal clock source.
  *  @param   none
  *  @return  none
  */
@@ -83,16 +104,11 @@ extern void fxls8471q_init(void);
  */
 extern uint8_t fxls8471q_testConnection(void);
 /**
- *  @brief   Power on and prepare for general usage.
- *  This will activate the device and take it out of sleep mode (which must be done
- *  after start-up). This function also sets both the accelerometer and the gyroscope
- *  to their most sensitive settings, namely +/- 2g and +/- 250 degrees/sec, and sets
- *  the clock source to use the X Gyro for reference, which is slightly better than
- *  the default internal clock source.
+ *  @brief   Print the register value.
  *  @param   none
  *  @return  none
  */
-extern void fxls8471q_switchMode(uint8_t mode);
+extern void fxls8471q_debug(uint8_t regAddr);
 
 
 

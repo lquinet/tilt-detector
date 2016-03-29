@@ -32,11 +32,30 @@ LICENSE:
 #define FXLS8471Q_WHO_AM_I_BIT        7
 #define FXLS8471Q_WHO_AM_I_LENGTH     8
 
+// CTRL_REG1 configuration
 #define FXLS8471Q_CTRL_REG1     0x2A   
 #define FXLS8471Q_CTRL_REG1_active_BIT     0 
 #define FXLS8471Q_CTRL_REG1_active_LENGTH  1
+#define FXLS8471Q_CTRL_REG1_ASPL_BIT     6 
+#define FXLS8471Q_CTRL_REG1_ASPL_LENGTH  2 
+#define FXLS8471Q_CTRL_REG1_ODR_BIT      3 
+#define FXLS8471Q_CTRL_REG1_ODR_LENGTH   3 
 
+// CTRL_REG2 configuration
 #define FXLS8471Q_CTRL_REG2     0x2B
+#define FXLS8471Q_CTRL_REG2_mods_BIT     1
+#define FXLS8471Q_CTRL_REG2_mods_LENGTH  2
+#define FXLS8471Q_CTRL_REG2_slpe_BIT     2
+#define FXLS8471Q_CTRL_REG2_slpe_LENGTH  1
+#define FXLS8471Q_CTRL_REG2_smods_BIT    4
+#define FXLS8471Q_CTRL_REG2_smods_LENGTH 2
+
+// Sensor data configuration
+#define FXLS8471Q_XYZ_DATA_CFG0 0x0E   
+#define FXLS8471Q_XYZ_fs_BIT    0x0
+#define FXLS8471Q_XYZ_fs_LENGTH 2
+
+
 #define FXLS8471Q_CTRL_REG3     0x2C
 #define FXLS8471Q_CTRL_REG4     0x2D
 #define FXLS8471Q_CTRL_REG5     0x2E
