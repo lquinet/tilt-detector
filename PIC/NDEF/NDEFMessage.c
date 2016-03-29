@@ -60,15 +60,10 @@ void NdefMessageAddTextRecord(char *text, const rom char *encoding)
     // @LOIC: Met le nombre de place que prends le texte 
     // On doit ajouter le nb de caractères de l'encodage + 1 car il faut aussi mettre le status byte
     NdefRecordSetPayloadLengh(strlen(text)+strlenpgm(encoding)+1);
+    // TLV length = payload length + 4 car on doit ajouter le cabability container CC1, CC2, CC3, CC4
     NdefRecordSetTLV_Length(NdefRecord._payloadLength+4);
+    // Satus byte = encoding length car UTF-8
     NdefRecordSetStatusByte(strlenpgm(encoding));
-    
-//    NdefRecord._payload[0]=NdefRecord._RecordHeader;
-//    NdefRecord._payload[1]=NdefRecord._typeLength;
-//    NdefRecord._payload[2]=NdefRecord._payloadLength;
-//    NdefRecord._payload[3]=NdefRecord._type[0];
-    //NdefRecord._payload[4]=NdefRecord._StatusByte;
-    
  
  // @LOIC:
  // Structure d'un payload de TNF "NFC Forum well-known type" et de type text:
