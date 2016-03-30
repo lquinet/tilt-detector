@@ -56,6 +56,7 @@
  **********************************************************************/
 char StrTempNdefMessage[0xFF];
 char value[80]="";
+I2C_message_t My_I2C_Message;
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
  **********************************************************************/
@@ -63,22 +64,19 @@ char value[80]="";
 TASK(TASK_Main)
 {
     char str[30] = "";
-    I2C_message_t My_I2C_Message;
     IntTo8_t subAddress;
-    subAddress.LongNb = 30;
+    data_t data;
+    subAddress.LongNb = 0;
+    
+    data.type_message= TYPE_TEMP; data.day=30; data.month=3; data.year=16; data.hour=15; data.min=43; data.temp=26;
 
     M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
     
-    strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
-    // @LOIC: sert à mettre toute la chaine de caract. StrTempNdefMessage à 0
-    memset(StrTempNdefMessage, 0, sizeof (StrTempNdefMessage));
-    NdefMessageAddTextRecord(str, "en");
-    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
+    //strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
+    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
 
-    strcpypgm2ram(str, "Best 2: Oui ca a marcher!");
-    memset(StrTempNdefMessage, 0, sizeof (StrTempNdefMessage));
-    NdefMessageAddTextRecord(str, "en");
-    M24LR04E_SaveNdefMessage(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
+    strcpypgm2ram(str, "Best 2: Oui ca a marcheeee!");
+    //M24LR04E_SaveNdefMessage(str, "en", &My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER);
     
     
     M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, subAddress, 70, value);
