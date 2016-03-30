@@ -3,12 +3,13 @@
 #include "user.h"
 #include "M24LR04E_R.h"
 #include "NDEF/NDEFRecord.h"
-//#include "tsk_task_main.h"
+
+extern I2C_message_t My_I2C_Message;
 
 /**********************************************************************
  * Definition dedicated to the global variable
  **********************************************************************/
-
+boolean isMemoryFull;
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
@@ -204,8 +205,7 @@ uint8_t M24LR04E_ReadOneByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t su
     ClearEvent(I2C_QUEUE_EMPTY);
 
     if (MemMsg->flags.error != 0)
-        // return E_OS_STATE;
-        return;
+        return -1;
 
     return pData[0];
 }
@@ -255,20 +255,39 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
 
 /**********************************************************************
  * Update the M24LR04E with the Time structure passed to the function.
- *
+ * 
+ * @param  *text    	 Text to store in NDEF message
+ * @param  *encoding     The string of the encoding language         
  * @param  MemMsg    	 IN  Mandatory I2C structure
- * @param  value       	 IN  The date and time to put into the EELC256
+ * @param  address    	 The slave address of the M24LR04E
  * @return Status         E_OK if the EELC256 has been updated
  *                        E_OS_STATE if the I2C access failed
  **********************************************************************/
-StatusType M24LR04E_SaveNdefMessage(I2C_message_t *MemMsg, uint8_t address)
+StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
 
 {
     static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
+    char text;
+    
+    // Building of a string from the structure data_t
+    BuildMessage(text, data);
+    
+    // Creation of the NDEF message in NdefRecord structure
+    NdefMessageAddTextRecord(text, encoding);
     
     // Nb Bytes To Send = the value of the TLV Length byte + the TLV Length byte +  the TLV Length byte + TLV Tag byte + Terminator TLV
     NbByteToSend = NdefRecord._TLV_Length + 3;
+    
+    // Test if user e²prom memory is full
+    if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
+    {
+        IntTo8_t subAddress = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
+        
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_ADDRESS_USER, subAddress,MemoryFull);
+        isMemoryFull = MemoryFull;
+        return E_OS_STATE;
+    }
     
     MemMsg->control = address & 0xFE;
     //  High byte of addr, only used if high bit set
@@ -405,9 +424,38 @@ void WaitEepResponse (void){
             while (PIR1bits.SSPIF == 0);
             PIR1bits.SSPIF = 0;
         }
-
     } while (SSPCON2bits.ACKSTAT == 1);
     
     // enable the i2c interrupt enable bit (SSP1IE)
     PIE1  |= 0b00001000;
+}
+
+void BuildMessage(char *text, data_t data){
+    // char text0, text1, text2, text3, text4, text5, text6, text7, text8, text9, text10, text11, text12, text13, text14, text15, text16;
+    
+    if (data.type_message == TYPE_ACCEL){
+        text = ( char *) &data;
+    }
+    if (data.type_message == TYPE_TEMP){
+        data.Xacc = data.temp;
+        text = ( char *) &data;
+        /*
+        text0 = text[0];
+        text1 = text[1];
+        text2 = text[2];
+        text3 = text[3];
+        text4 = text[4];
+         text5 = text[5];
+         text6 = text[6];
+                text7 = text[7];
+                text8 = text[8];
+                text9 = text[9];
+                text10 = text[10];
+                text11 = text[11];
+                text12 = text[12];
+                text13 = text[13];
+                text14 = text[14];
+                text15 = text[15];
+                text16 = text[16];*/
+    }
 }
