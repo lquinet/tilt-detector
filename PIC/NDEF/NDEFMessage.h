@@ -8,12 +8,6 @@
 #ifndef NDEFMESSAGE_H
 #define	NDEFMESSAGE_H
 
-
-//void NdefMessageAddRomTextRecord(const rom char *text);
-void NdefMessageAddRomTextRecord(const rom char *text, const rom char *encoding);
-
-//void NdefMessageAddTextRecord(char *text);
-
 /* @LOIC:
  ** @name NdefMessageAddTextRecord
  * 
