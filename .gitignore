@@ -58,3 +58,13 @@ PIC/TiltDetector.X/build/default/production/_ext/239857660/drv_rs.o.d
 PIC/TiltDetector.X/build/default/production/_ext/299869866/FXLS8471Q.o.d
 PIC/TiltDetector.X/dist/default/production/TiltDetector.X.production.cof
 PIC/TiltDetector.X/dist/default/production/TiltDetector.X.production.map
+PIC/TiltDetector.X/build/default/debug/_ext/1472/int.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/1472/main.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/1472/taskdesc.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/1472/tsk_task_Main.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/1966662772/int_man.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/239857660/drv_i2c.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/239857660/drv_rs.o.d
+PIC/TiltDetector.X/build/default/debug/_ext/299869866/FXLS8471Q.o.d
+PIC/TiltDetector.X/dist/default/debug/TiltDetector.X.debug.cof
+PIC/TiltDetector.X/dist/default/debug/TiltDetector.X.debug.map
