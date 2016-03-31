@@ -52,21 +52,37 @@
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
-
+#define ALARM_TSK0      0
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
  **********************************************************************/
 
 TASK(TASK_Main)
 {
+    int16_t fxls8471q[3];
+    uint8_t buffer[10];
     #ifdef DEBUG
 	Printf("\r\nTiltDetector initialisation ...\r\n");
 	#endif
     
+    
     fxls8471q_init();
     
+    fxls8471q_debug(0x2A);
+    fxls8471q_debug(0x2B);
+    
+    SetRelAlarm(ALARM_TSK0, 1000, 1000);
     while(1){
-        ;
+        WaitEvent(ALARM_EVENT);
+        ClearEvent(ALARM_EVENT);
+        
+        fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
+        itoa(fxls8471q[0], buffer);
+        Printf("Ax:%s",buffer);
+        itoa(fxls8471q[1], buffer);
+        Printf("Ay:%s",buffer);
+        itoa(fxls8471q[2], buffer);
+        Printf("Az:%s\n",buffer);
     }
     
 }
