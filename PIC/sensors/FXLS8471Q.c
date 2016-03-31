@@ -17,6 +17,12 @@
 /************************************************************************/
 /* Private functions                                                    */
 /************************************************************************/
+/* @brief Write the data into the register
+ * @param devAddr I2C slave device address
+ * @param regAddr Register regAddr to write to
+ * @param data Value to be written in the register
+ * @return none
+ */
 void I2C_writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t data)
 {
     I2C_message_t MemMsg;
@@ -44,7 +50,13 @@ void I2C_writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t data)
     WaitEvent(I2C_QUEUE_EMPTY);
     ClearEvent(I2C_QUEUE_EMPTY);
 }
-
+/* @brief Read one or multiple register
+ * @param devAddr I2C slave device address
+ * @param regAddr Register regAddr to write to
+ * @param nBytes Number of bytes to read
+ * @param data array where data will be stocked
+ * @return none
+ */
 void I2C_readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t nBytes, uint8_t data[])
 {
     I2C_message_t MemMsg;
@@ -72,7 +84,7 @@ void I2C_readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t nBytes, uint8_t 
     WaitEvent(I2C_QUEUE_EMPTY);
     ClearEvent(I2C_QUEUE_EMPTY);
 }
-/** Write multiple bits in an 8-bit device register.
+/* @brief Write multiple bits in an 8-bit device register.
  * @param devAddr I2C slave device address
  * @param regAddr Register regAddr to write to
  * @param bitStart First bit position to write (0-7)
@@ -95,7 +107,7 @@ void fxls8471q_writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uin
 	I2C_writeRegister(devAddr, regAddr, read[0]);
 }
 
-/** Read multiple bits from an 8-bit device register.
+/* @brief Read multiple bits from an 8-bit device register.
  * @param devAddr I2C slave device address
  * @param regAddr Register regAddr to read from
  * @param bitStart First bit position to read (0-7)
@@ -121,55 +133,55 @@ uint8_t fxls8471q_readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, u
     return read[0];
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Change the mode of the device (wake or standby)
+ * @param mode FXLS8471Q_MODE_X 
  * @return none
  */
 void fxls8471q_switchMode(uint8_t mode){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG1, FXLS8471Q_CTRL_REG1_active_BIT, FXLS8471Q_CTRL_REG1_active_LENGTH, mode);
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Set the range of the accelerometer
+ * @param range FXLS8471Q_FS_X
  * @return none
  */
 void fxls8471q_setFullScaleRange(uint8_t range){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_XYZ_DATA_CFG0, FXLS8471Q_XYZ_fs_BIT, FXLS8471Q_XYZ_fs_LENGTH, range);
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Set the auto-wake sample frequency.
+ * @param rate FXLS8471Q_ASPL_X
  * @return none
  */
 void fxls8471q_setASPLRate(uint8_t rate){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG1, FXLS8471Q_CTRL_REG1_ASPL_BIT, FXLS8471Q_CTRL_REG1_ASPL_LENGTH, rate);
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Set the system output data rate.
+ * @param odr FXLS8471Q_ODR_X
  * @return none
  */
 void fxls8471q_setODR(uint8_t odr){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG1, FXLS8471Q_CTRL_REG1_ODR_BIT, FXLS8471Q_CTRL_REG1_ODR_LENGTH, odr);
 }
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Set the power mode.
+ * @param powerMode FXLS8471Q_PM_X
  * @return none
  */
 void fxls8471q_setMods(uint8_t powerMode){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG2, FXLS8471Q_CTRL_REG2_mods_BIT, FXLS8471Q_CTRL_REG2_mods_LENGTH, powerMode);
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Allow the device to enter in sleep mode.
+ * @param sleep FXLS8471Q_SLEEP_X
  * @return none
  */
 void fxls8471q_setSleep(uint8_t sleep){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG2, FXLS8471Q_CTRL_REG2_slpe_BIT, FXLS8471Q_CTRL_REG2_slpe_LENGTH, sleep);
 }
 
-/* @brief Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
+/* @brief Set the power mode for the sleep mode.
+ * @param powerMode FXLS8471Q_PM_X
  * @return none
  */
 void fxls8471q_setSMods(uint8_t powerMode){
@@ -182,7 +194,7 @@ void fxls8471q_setSMods(uint8_t powerMode){
 
 /*************************************************************************
 Function: fxls8471q_init()
-Purpose:  none
+Purpose:  Initialize the FLXS8471Q
 Input:    none
 Returns:  none
 **************************************************************************/
@@ -198,13 +210,14 @@ void fxls8471q_init(void){
         Printf("FXLS8471Q connected !\r\n");
         #endif
         fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
+        fxls8471q_calibrate();
         fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-2G
-        fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
+        //fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
         fxls8471q_setODR(FXLS8471Q_ODR_800);  //
         fxls8471q_setMods(FXLS8471Q_PM_HR);
-        fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
-        fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
-        
+        //fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
+        //fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
+        fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q initialisation finished !\r\n");
         #endif
@@ -231,9 +244,61 @@ uint8_t fxls8471q_testConnection(void)
 }
 
 /*************************************************************************
-Function: fxls8471q_debug()
-Purpose:  none
+Function: fxls8471q_getAcceleration()
+Purpose:  Get values from the accelerometer
+Input:    Int16 pointer to x, y, z: values that are returned
+Returns:  none
+**************************************************************************/
+void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z)
+{
+    uint8_t rawVal[6];
+    I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OUT_X_MSB, 6, &rawVal[0]);
+    
+    *x = (int16_t)(((rawVal[0] << 8) | (rawVal[1]))) / 4 ;
+    *y = (int16_t)(((rawVal[2] << 8) | (rawVal[3]))) / 4 ;
+    *z = (int16_t)(((rawVal[4] << 8) | (rawVal[5]))) / 4 ;
+
+}
+
+/*************************************************************************
+Function: fxls8471q_calibrate()
+Purpose:  Calibrate the accelerometer. Must be in flat position
 Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_calibrate()
+{
+    int16_t fxls8471q[3]={0,0,0};
+    int8_t offset[3]={0,0,0};
+    
+    // Configuration 
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
+    fxls8471q_setODR(FXLS8471Q_ODR_200); // 200Hz
+    fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //+-2g
+    
+    // Get values
+    fxls8471q_switchMode(FXLS8471Q_MODE_WAKE); //switch to standby mode
+    fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
+    
+    // Calculate offset correction value for each axis  
+    fxls8471q[0]=(fxls8471q[0]/8);
+    fxls8471q[1]=(fxls8471q[0]/8);
+    fxls8471q[2]=((4096-fxls8471q[2])/8);
+    offset[0]=-fxls8471q[0];
+    offset[1]=-fxls8471q[1];
+    offset[2]=fxls8471q[2];
+    
+    // Write offset correction values
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_X, offset[0]);
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_Y, offset[1]);
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_Z, offset[2]);
+}
+
+/*************************************************************************
+Function: fxls8471q_debug()
+Purpose:  Print the value of the register
+Input:    uint8_t with the address of the register
 Returns:  none
 **************************************************************************/
 void fxls8471q_debug(uint8_t regAddr)

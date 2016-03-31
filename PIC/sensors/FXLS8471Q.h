@@ -92,7 +92,7 @@ LICENSE:
 /* Functions prototype                                                  */
 /************************************************************************/
 /**
- *  @brief   Power on and prepare for general usage.
+ *  @brief   Power on the accelerometer and set it @800Hz +-2g.
  *  @param   none
  *  @return  none
  */
@@ -104,8 +104,20 @@ extern void fxls8471q_init(void);
  */
 extern uint8_t fxls8471q_testConnection(void);
 /**
- *  @brief   Print the register value.
+ *  @brief   Calibrate the accelerometer and write offset in device register.
  *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_calibrate(void);
+/**
+ *  @brief   Read the acceleration value in the accelerometer.
+ *  @param   x,y,z int16 pointer with the accelerometer value of the corresponding axis
+ *  @return  none
+ */
+extern void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z);
+/**
+ *  @brief   Print the register value.
+ *  @param   regAddr Register to be displayed
  *  @return  none
  */
 extern void fxls8471q_debug(uint8_t regAddr);
