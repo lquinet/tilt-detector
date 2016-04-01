@@ -103,7 +103,11 @@ void InterruptVectorL(void)
     //******************************************************
     /*Here is the next interrupts you want to manage */
     //************************************************
-
+    if (INTCONbits.INT0IF)
+    {
+        SetEvent(TASK_Main_ID, ACC_EVENT);
+        INTCONbits.INT0IF=0;
+    }
     if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
         (PIR1bits.SSPIF == 1)) // Check I2C interrupt	(bit3)
     {

@@ -72,6 +72,7 @@
 
 //TASK Main
 #define ALARM_EVENT       	0x02
+#define ACC_EVENT       	0x05
 
 //DRV_RS
 #define RS_NEW_MSG          0x10

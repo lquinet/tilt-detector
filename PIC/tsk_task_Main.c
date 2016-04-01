@@ -47,6 +47,7 @@
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
 #include "sensors/FXLS8471Q.h"
+#include "sensors/FXLS8471Q_registers.h"
 
 
 /**********************************************************************
@@ -65,24 +66,32 @@ TASK(TASK_Main)
 	Printf("\r\nTiltDetector initialisation ...\r\n");
 	#endif
     
-    
     fxls8471q_init();
     
-    fxls8471q_debug(0x2A);
-    fxls8471q_debug(0x2B);
+   /*fxls8471q_debug(FXLS8471Q_CTRL_REG1); 
+    fxls8471q_debug(FXLS8471Q_CTRL_REG2);
+    fxls8471q_debug(FXLS8471Q_CTRL_REG4);
+    fxls8471q_debug(FXLS8471Q_CTRL_REG5);
+    fxls8471q_debug(FXLS8471Q_PL_CFG);
+    fxls8471q_debug(FXLS8471Q_PL_COUNT);
+    fxls8471q_debug(FXLS8471Q_PL_BF_ZCOMP);
+    fxls8471q_debug(FXLS8471Q_PL_THS_REG);*/
     
-    SetRelAlarm(ALARM_TSK0, 1000, 1000);
+    //SetRelAlarm(ALARM_TSK0, 1000, 1000);
     while(1){
-        WaitEvent(ALARM_EVENT);
-        ClearEvent(ALARM_EVENT);
+        /*WaitEvent(ALARM_EVENT);
+        ClearEvent(ALARM_EVENT);*/
+        WaitEvent(ACC_EVENT);
+        ClearEvent(ACC_EVENT);
         
-        fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
+        fxls8471q_checkSourceInterrupt();
+        /*fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
         itoa(fxls8471q[0], buffer);
         Printf("Ax:%s",buffer);
         itoa(fxls8471q[1], buffer);
         Printf("Ay:%s",buffer);
         itoa(fxls8471q[2], buffer);
-        Printf("Az:%s\n",buffer);
+        Printf("Az:%s\n",buffer);*/
     }
     
 }
