@@ -42,6 +42,34 @@ LICENSE:
 #define FXLS8471Q_WHO_AM_I_BIT        7
 #define FXLS8471Q_WHO_AM_I_LENGTH     8
 
+// Interrupt source register
+#define FXLS8471Q_INT_SOURCE 0x0C
+
+// Portrait/Landscape Detection
+#define FXLS8471Q_PL_STATUS     0x10
+#define FXLS8471Q_PL_STATUS_lapo_BIT        2
+#define FXLS8471Q_PL_STATUS_lapo_LENGTH     2
+#define FXLS8471Q_PL_STATUS_bafro_BIT       0
+#define FXLS8471Q_PL_STATUS_bafro_LENGTH    1
+#define FXLS8471Q_PL_STATUS_newlp_BIT       7
+#define FXLS8471Q_PL_STATUS_newlp_LENGTH    1
+#define FXLS8471Q_PL_CFG        0x11
+#define FXLS8471Q_PL_CFG_plen_BIT           6
+#define FXLS8471Q_PL_CFG_plen_LENGTH        1
+#define FXLS8471Q_PL_COUNT      0x12 // This register sets the debounce count for the orientation state transition.
+#define FXLS8471Q_PL_COUNT_dbnce_BIT        7
+#define FXLS8471Q_PL_COUNT_dbnce_LENGTH     8
+#define FXLS8471Q_PL_BF_ZCOMP   0x13 // Back/Front and Z-tilt angle compensation register
+#define FXLS8471Q_PL_BF_ZCOMP_bkdr_BIT      7
+#define FXLS8471Q_PL_BF_ZCOMP_bkdr_LENGTH   2
+#define FXLS8471Q_PL_BF_ZCOMP_zlock_BIT     2
+#define FXLS8471Q_PL_BF_ZCOMP_zlock_LENGTH  3
+#define FXLS8471Q_PL_THS_REG    0x14 // Portrait to landscape trip threshold registers
+#define FXLS8471Q_PL_THS_REG_plths_BIT      7
+#define FXLS8471Q_PL_THS_REG_plths_LENGTH   5
+#define FXLS8471Q_PL_THS_REG_hys_BIT        2
+#define FXLS8471Q_PL_THS_REG_hys_LENGTH     3
+
 // CTRL_REG1 configuration
 #define FXLS8471Q_CTRL_REG1     0x2A   
 #define FXLS8471Q_CTRL_REG1_active_BIT     0 
@@ -71,8 +99,28 @@ LICENSE:
 #define FXLS8471Q_OFF_Z 0x31
 
 #define FXLS8471Q_CTRL_REG3     0x2C
-#define FXLS8471Q_CTRL_REG4     0x2D
+
+// CTRL_REG4 -- Interrupt enable register
+#define FXLS8471Q_CTRL_REG4     0x2D 
+#define FXLS8471Q_CTRL_REG4_aslp_BIT    7
+#define FXLS8471Q_CTRL_REG4_fifo_BIT    6
+#define FXLS8471Q_CTRL_REG4_trans_BIT   5
+#define FXLS8471Q_CTRL_REG4_lndprt_BIT  4
+#define FXLS8471Q_CTRL_REG4_pulse_BIT   3
+#define FXLS8471Q_CTRL_REG4_ffmt_BIT    2
+#define FXLS8471Q_CTRL_REG4_avecm_BIT   1
+#define FXLS8471Q_CTRL_REG4_drdy_BIT    0
+
+// CTRL_REG5 -- Interrupt Routing Configuration Register
 #define FXLS8471Q_CTRL_REG5     0x2E
+#define FXLS8471Q_CTRL_REG5_aslp_BIT    7
+#define FXLS8471Q_CTRL_REG5_fifo_BIT    6
+#define FXLS8471Q_CTRL_REG5_trans_BIT   5
+#define FXLS8471Q_CTRL_REG5_lndprt_BIT  4
+#define FXLS8471Q_CTRL_REG5_pulse_BIT   3
+#define FXLS8471Q_CTRL_REG5_ffmt_BIT    2
+#define FXLS8471Q_CTRL_REG5_avecm_BIT   1
+#define FXLS8471Q_CTRL_REG5_drdy_BIT    0
 
 #endif	/* FXLS8471Q_REGISTERS_H */
 
