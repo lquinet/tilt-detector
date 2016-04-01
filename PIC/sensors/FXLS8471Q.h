@@ -81,6 +81,82 @@ LICENSE:
 #define FXLS8471Q_SLEEP_OFF     0
 #define FXLS8471Q_SLEEP_ON      1
 
+// <<Portrait/Landscape>>
+#define FXLS8471Q_PL_OFF        0 // Portrait/Landscape disabled
+#define FXLS8471Q_PL_ON         1 // Portrait/Landscape enabled
+// Back/Front orientation definitions (see datasheet p.48)
+#define FXLS8471Q_BKFR_0    0x00
+#define FXLS8471Q_BKFR_1    0x01
+#define FXLS8471Q_BKFR_2    0x02
+#define FXLS8471Q_BKFR_3    0x03
+// Z-Lockout angle trip (see datasheet p.48)
+#define FXLS8471Q_ZLOCK_13  0x00
+#define FXLS8471Q_ZLOCK_17  0x01
+#define FXLS8471Q_ZLOCK_20  0x02
+#define FXLS8471Q_ZLOCK_24  0x03
+#define FXLS8471Q_ZLOCK_28  0x04
+#define FXLS8471Q_ZLOCK_32  0x05
+#define FXLS8471Q_ZLOCK_36  0x06
+#define FXLS8471Q_ZLOCK_40  0x07
+// Threshold angle
+#define FXLS8471Q_THS_15  0x07 // 15°
+#define FXLS8471Q_THS_20  0x09 // 20°
+#define FXLS8471Q_THS_30  0x0C // 30°
+#define FXLS8471Q_THS_35  0x0D // 35°
+#define FXLS8471Q_THS_40  0x0F // 40°
+#define FXLS8471Q_THS_45  0x10 // 45°
+#define FXLS8471Q_THS_55  0x13 // 55°
+#define FXLS8471Q_THS_60  0x14 // 60°
+#define FXLS8471Q_THS_70  0x17 // 70°
+#define FXLS8471Q_THS_75  0x19 // 75°
+// Hysteresus settings (see datasheet p.49)
+#define FXLS8471Q_HYS_0  0x00
+#define FXLS8471Q_HYS_1  0x01
+#define FXLS8471Q_HYS_2  0x02
+#define FXLS8471Q_HYS_3  0x03
+#define FXLS8471Q_HYS_4  0x04
+#define FXLS8471Q_HYS_5  0x05
+#define FXLS8471Q_HYS_6  0x06
+#define FXLS8471Q_HYS_7  0x07
+// PL_Status 
+#define FXLS8471Q_LAPO_UP       0x00
+#define FXLS8471Q_LAPO_DOWN     0x01
+#define FXLS8471Q_LAPO_RIGHT    0x02
+#define FXLS8471Q_LAPO_LEFT     0x03
+#define FXLS8471Q_BAFRO_FRONT   0x00
+#define FXLS8471Q_BAFRO_BACK    0x01
+
+// <<Interruptions>>
+// Interruption configuration
+#define FXLS8471Q_INT_aslp_OFF      0x00
+#define FXLS8471Q_INT_aslp_ON       0x01
+#define FXLS8471Q_INT_fifo_OFF      0x00
+#define FXLS8471Q_INT_fifo_ON       0x01
+#define FXLS8471Q_INT_trans_OFF     0x00
+#define FXLS8471Q_INT_trans_ON      0x01
+#define FXLS8471Q_INT_lndprt_OFF    0x00
+#define FXLS8471Q_INT_lndprt_ON     0x01
+#define FXLS8471Q_INT_pulse_OFF     0x00
+#define FXLS8471Q_INT_pulse_ON      0x01
+#define FXLS8471Q_INT_ffmt_OFF      0x00
+#define FXLS8471Q_INT_ffmt_ON       0x01
+#define FXLS8471Q_INT_avecm_OFF     0x00
+#define FXLS8471Q_INT_avecm_ON      0x01
+#define FXLS8471Q_INT_drdy_OFF      0x00
+#define FXLS8471Q_INT_drdy_ON       0x01
+// Interruptions Routing
+#define FXLS8471Q_INT_INT2      0x00
+#define FXLS8471Q_INT_INT1      0x01
+// Interruptions
+#define FXLS8471Q_INT_SOURCE_aslp   0x80
+#define FXLS8471Q_INT_SOURCE_fifo   0x40
+#define FXLS8471Q_INT_SOURCE_trans  0x20
+#define FXLS8471Q_INT_SOURCE_lndprt 0x10
+#define FXLS8471Q_INT_SOURCE_pulse  0x08
+#define FXLS8471Q_INT_SOURCE_ffmt   0x04
+#define FXLS8471Q_INT_SOURCE_avecm  0x02
+#define FXLS8471Q_INT_SOURCE_drdy   0x01
+
 // Power Mode
 #define FXLS8471Q_PM_NORMAL     0x00 // Normal
 #define FXLS8471Q_PM_LNLP       0x01 // Low noise, low power
@@ -115,6 +191,30 @@ extern void fxls8471q_calibrate(void);
  *  @return  none
  */
 extern void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z);
+/**
+ *  @brief   Configure the accelerometer to detect the orientation.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_configureOrientationDetection(void);
+/**
+ *  @brief   Configure the interruptions in the accelerometer.
+ *  @param   XLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
+ *  @return  none
+ */
+extern void fxls8471q_configureInterrupt(uint8_t aslp, uint8_t fifo, uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm, uint8_t drdy);
+/**
+ *  @brief   Configure the pin of interruptions in the accelerometer.
+ *  @param   FXLS8471Q_INT_INT2 or FXLS8471Q_INT_INT1
+ *  @return  none
+ */
+extern void fxls8471q_configureRoutingInterrupt(uint8_t aslp, uint8_t fifo, uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm, uint8_t drdy);
+/**
+ *  @brief   Check the source of the interruption.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_checkSourceInterrupt(void);
 /**
  *  @brief   Print the register value.
  *  @param   regAddr Register to be displayed

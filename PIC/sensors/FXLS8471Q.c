@@ -188,6 +188,67 @@ void fxls8471q_setSMods(uint8_t powerMode){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG2, FXLS8471Q_CTRL_REG2_smods_BIT, FXLS8471Q_CTRL_REG2_smods_LENGTH, powerMode);
 }
 
+/* @brief Manage the portrait landscape interrupt.
+ * @param none
+ * @return none
+ */
+void fxls8471q_managePortraitLandscape(void)
+{   
+    uint8_t newlp=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_newlp_BIT, FXLS8471Q_PL_STATUS_newlp_LENGTH);
+    if(newlp==1){
+        
+        uint8_t lapo=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_lapo_BIT, FXLS8471Q_PL_STATUS_lapo_LENGTH);
+        uint8_t bafro=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_bafro_BIT, FXLS8471Q_PL_STATUS_bafro_LENGTH);
+        
+        switch(bafro){
+            case FXLS8471Q_BAFRO_FRONT:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Front orientation and ");
+                #endif
+                break;
+            case FXLS8471Q_BAFRO_BACK:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Back orientation and ");
+                #endif
+                break;
+            default:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Error managePortrait!\r\n");
+                #endif
+            break;
+        }
+        
+        switch(lapo){
+            case FXLS8471Q_LAPO_UP:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Portrait up!\r\n");
+                #endif
+                break;
+            case FXLS8471Q_LAPO_DOWN:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Portrait down!\r\n");
+                #endif
+                break;
+            case FXLS8471Q_LAPO_RIGHT:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Landscape right!\r\n");
+                #endif
+                break;
+            case FXLS8471Q_LAPO_LEFT:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Landscape left!\r\n");
+                #endif
+                break;
+            default:
+                #ifdef DEBUG_FXLS8471Q
+                Printf("Error managePortrait!\r\n");
+                #endif
+            break;
+        }
+        
+    }
+}
+
 /************************************************************************/
 /* Public functions                                                    */
 /************************************************************************/
@@ -213,11 +274,16 @@ void fxls8471q_init(void){
         fxls8471q_calibrate();
         fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-2G
         //fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
-        fxls8471q_setODR(FXLS8471Q_ODR_800);  //
+        fxls8471q_setODR(FXLS8471Q_ODR_50);  //
         fxls8471q_setMods(FXLS8471Q_PM_HR);
         //fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
         //fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
+        fxls8471q_configureOrientationDetection();
+        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_OFF, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
+        fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
+        I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG3, 0x00); // RESET the CTRL_REG3 register
         fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
+        
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q initialisation finished !\r\n");
         #endif
@@ -295,6 +361,82 @@ void fxls8471q_calibrate()
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_Z, offset[2]);
 }
 
+/*************************************************************************
+Function: fxls8471q_configureOrientationDetection()
+Purpose:  Configure the accelerometer to detect the orientation
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureOrientationDetection(void)
+{
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+    // Enable the orientation detection
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_CFG, FXLS8471Q_PL_CFG_plen_BIT, FXLS8471Q_PL_CFG_plen_LENGTH, FXLS8471Q_PL_ON);
+    // Set the Back/Front Angle trip points
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_PL_BF_ZCOMP_bkdr_BIT, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_BKFR_2);
+    // Set the Z-Lockout angle trip point
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_PL_BF_ZCOMP_zlock_BIT, FXLS8471Q_PL_BF_ZCOMP_zlock_LENGTH, FXLS8471Q_ZLOCK_28);
+    // Set the Trip Threshold Angle 
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_plths_BIT, FXLS8471Q_PL_THS_REG_plths_LENGTH, FXLS8471Q_THS_30);
+    // Set the Hysteresis Angle 
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_hys_BIT, FXLS8471Q_PL_THS_REG_hys_LENGTH, FXLS8471Q_HYS_3);
+    // Set the debounce counter
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_COUNT, FXLS8471Q_PL_COUNT_dbnce_BIT, FXLS8471Q_PL_COUNT_dbnce_LENGTH, FXLS8471Q_ODR_12_5);
+}
+/*************************************************************************
+Function: fxls8471q_configureInterrupt()
+Purpose:  Configure the interruptions in the accelerometer
+Input:    FXLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureInterrupt(uint8_t aslp, uint8_t fifo, uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm, uint8_t drdy){
+    uint8_t intRegister =0;
+    intRegister |= aslp << FXLS8471Q_CTRL_REG4_aslp_BIT;
+    intRegister |= fifo << FXLS8471Q_CTRL_REG4_fifo_BIT;
+    intRegister |= trans << FXLS8471Q_CTRL_REG4_trans_BIT;
+    intRegister |= lndprt << FXLS8471Q_CTRL_REG4_lndprt_BIT;
+    intRegister |= pulse << FXLS8471Q_CTRL_REG4_pulse_BIT;
+    intRegister |= ffmt << FXLS8471Q_CTRL_REG4_ffmt_BIT;
+    intRegister |= avecm << FXLS8471Q_CTRL_REG4_avecm_BIT;
+    intRegister |= drdy << FXLS8471Q_CTRL_REG4_drdy_BIT;
+    
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG4, intRegister);
+}
+
+/*************************************************************************
+Function: fxls8471q_configureRoutingInterrupt()
+Purpose:  Configure the pin of interruptions in the accelerometer
+Input:    FXLS8471Q_INT_INT2 or FXLS8471Q_INT_INT1
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureRoutingInterrupt(uint8_t aslp, uint8_t fifo, uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm, uint8_t drdy){
+    uint8_t intRegister =0;
+    intRegister |= aslp << FXLS8471Q_CTRL_REG5_aslp_BIT;
+    intRegister |= fifo << FXLS8471Q_CTRL_REG5_fifo_BIT;
+    intRegister |= trans << FXLS8471Q_CTRL_REG5_trans_BIT;
+    intRegister |= lndprt << FXLS8471Q_CTRL_REG5_lndprt_BIT;
+    intRegister |= pulse << FXLS8471Q_CTRL_REG5_pulse_BIT;
+    intRegister |= ffmt << FXLS8471Q_CTRL_REG5_ffmt_BIT;
+    intRegister |= avecm << FXLS8471Q_CTRL_REG5_avecm_BIT;
+    intRegister |= drdy << FXLS8471Q_CTRL_REG5_drdy_BIT;
+    
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG5, intRegister);
+}
+/*************************************************************************
+Function: fxls8471q_checkSourceInterrupt()
+Purpose:  Check the source of the interruption
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_checkSourceInterrupt(void)
+{
+    uint8_t sourceI[1]={0};
+    I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_INT_SOURCE, 1, &sourceI[0]);
+    
+    if(sourceI[0] & FXLS8471Q_INT_SOURCE_lndprt){
+        fxls8471q_managePortraitLandscape();
+    }
+}
 /*************************************************************************
 Function: fxls8471q_debug()
 Purpose:  Print the value of the register
