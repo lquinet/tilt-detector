@@ -13,7 +13,7 @@
 /************************************************************************/
 /* Constants and macros                                                 */
 /************************************************************************/
-
+volatile uint8_t prevLapo=0x10; 
 /************************************************************************/
 /* Private functions                                                    */
 /************************************************************************/
@@ -194,11 +194,16 @@ void fxls8471q_setSMods(uint8_t powerMode){
  */
 void fxls8471q_managePortraitLandscape(void)
 {   
-    uint8_t newlp=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_newlp_BIT, FXLS8471Q_PL_STATUS_newlp_LENGTH);
+    uint8_t rawVal[6];
+    uint8_t newlp=0;
+
+    I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, 1, &rawVal[0]);
+    newlp=(rawVal[0]&(1<<FXLS8471Q_PL_STATUS_newlp_BIT))>>FXLS8471Q_PL_STATUS_newlp_BIT;
+    
     if(newlp==1){
         
-        uint8_t lapo=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_lapo_BIT, FXLS8471Q_PL_STATUS_lapo_LENGTH);
-        uint8_t bafro=fxls8471q_readBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, FXLS8471Q_PL_STATUS_bafro_BIT, FXLS8471Q_PL_STATUS_bafro_LENGTH);
+        uint8_t lapo=(rawVal[0]&(0x06))>>1;
+        uint8_t bafro=rawVal[0]&(1<<FXLS8471Q_PL_STATUS_bafro_BIT);
         
         switch(bafro){
             case FXLS8471Q_BAFRO_FRONT:
@@ -217,35 +222,40 @@ void fxls8471q_managePortraitLandscape(void)
                 #endif
             break;
         }
-        
-        switch(lapo){
-            case FXLS8471Q_LAPO_UP:
-                #ifdef DEBUG_FXLS8471Q
-                Printf("Portrait up!\r\n");
-                #endif
+        if(prevLapo==lapo){ // when two events with same value occurs -> back in flat position
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Flat position!\r\n");
+            #endif
+        }else{
+            prevLapo=lapo;
+            switch(lapo){
+                case FXLS8471Q_LAPO_UP:
+                    #ifdef DEBUG_FXLS8471Q
+                    Printf("Portrait up!\r\n");
+                    #endif
+                    break;
+                case FXLS8471Q_LAPO_DOWN:
+                    #ifdef DEBUG_FXLS8471Q
+                    Printf("Portrait down!\r\n");
+                    #endif
+                    break;
+                case FXLS8471Q_LAPO_RIGHT:
+                    #ifdef DEBUG_FXLS8471Q
+                    Printf("Landscape right!\r\n");
+                    #endif
+                    break;
+                case FXLS8471Q_LAPO_LEFT:
+                    #ifdef DEBUG_FXLS8471Q
+                    Printf("Landscape left!\r\n");
+                    #endif
+                    break;
+                default:
+                    #ifdef DEBUG_FXLS8471Q
+                    Printf("Error managePortrait!\r\n");
+                    #endif
                 break;
-            case FXLS8471Q_LAPO_DOWN:
-                #ifdef DEBUG_FXLS8471Q
-                Printf("Portrait down!\r\n");
-                #endif
-                break;
-            case FXLS8471Q_LAPO_RIGHT:
-                #ifdef DEBUG_FXLS8471Q
-                Printf("Landscape right!\r\n");
-                #endif
-                break;
-            case FXLS8471Q_LAPO_LEFT:
-                #ifdef DEBUG_FXLS8471Q
-                Printf("Landscape left!\r\n");
-                #endif
-                break;
-            default:
-                #ifdef DEBUG_FXLS8471Q
-                Printf("Error managePortrait!\r\n");
-                #endif
-            break;
+            }
         }
-        
     }
 }
 
