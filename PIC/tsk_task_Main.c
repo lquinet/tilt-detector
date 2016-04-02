@@ -68,14 +68,19 @@ TASK(TASK_Main)
     
     fxls8471q_init();
     
-   /*fxls8471q_debug(FXLS8471Q_CTRL_REG1); 
+    /*fxls8471q_debug(FXLS8471Q_CTRL_REG1); 
     fxls8471q_debug(FXLS8471Q_CTRL_REG2);
     fxls8471q_debug(FXLS8471Q_CTRL_REG4);
-    fxls8471q_debug(FXLS8471Q_CTRL_REG5);
-    fxls8471q_debug(FXLS8471Q_PL_CFG);
+    fxls8471q_debug(FXLS8471Q_CTRL_REG5);*/
+    //Portrait/Landscape
+    /*fxls8471q_debug(FXLS8471Q_PL_CFG);
     fxls8471q_debug(FXLS8471Q_PL_COUNT);
     fxls8471q_debug(FXLS8471Q_PL_BF_ZCOMP);
     fxls8471q_debug(FXLS8471Q_PL_THS_REG);*/
+    //Motion detection
+    /*fxls8471q_debug(FXLS8471Q_FFMT_CFG);
+    fxls8471q_debug(FXLS8471Q_FFMT_THS);
+    fxls8471q_debug(FXLS8471Q_FFMT_COUNT);*/
     
     //SetRelAlarm(ALARM_TSK0, 1000, 1000);
     while(1){
