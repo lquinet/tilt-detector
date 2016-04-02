@@ -188,6 +188,74 @@ void fxls8471q_setSMods(uint8_t powerMode){
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG2, FXLS8471Q_CTRL_REG2_smods_BIT, FXLS8471Q_CTRL_REG2_smods_LENGTH, powerMode);
 }
 
+/* @brief Set the freefall/motion configuration register.
+ * @param FXLS8471Q_FFMT_ENABLE or FXLS8471Q_FFMT_DISABLE
+ * @return none
+ */
+void fxls8471q_setFFMT_CFG(uint8_t ele, uint8_t oae, uint8_t zefe, uint8_t yefe, uint8_t xefe){
+    uint8_t intRegister =0;
+    intRegister |= ele << FXLS8471Q_FFMT_CFG_ele_BIT;
+    intRegister |= oae << FXLS8471Q_FFMT_CFG_oae_BIT;
+    intRegister |= zefe << FXLS8471Q_FFMT_CFG_zefe_BIT;
+    intRegister |= yefe << FXLS8471Q_FFMT_CFG_yefe_BIT;
+    intRegister |= xefe << FXLS8471Q_FFMT_CFG_xefe_BIT;
+    
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_CFG, intRegister);
+}
+
+/* @brief Manage the portrait landscape interrupt.
+ * @param none
+ * @return none
+ */
+void fxls8471q_manageMotion(void){
+    uint8_t rawVal[6];
+    uint8_t ea=0, zhe=0, zhp=0, yhe=0, yhp=0, xhe=0, xhp=0;
+
+    I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_SRC, 1, &rawVal[0]);
+    ea=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_ea_BIT))>>FXLS8471Q_FFMT_SRC_ea_BIT;
+    zhe=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_zhe_BIT))>>FXLS8471Q_FFMT_SRC_zhe_BIT;
+    zhp=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_zhp_BIT))>>FXLS8471Q_FFMT_SRC_zhp_BIT;
+    yhe=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_yhe_BIT))>>FXLS8471Q_FFMT_SRC_yhe_BIT;
+    yhp=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_yhp_BIT))>>FXLS8471Q_FFMT_SRC_yhp_BIT;
+    xhe=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_xhe_BIT))>>FXLS8471Q_FFMT_SRC_xhe_BIT;
+    xhp=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_xhp_BIT))>>FXLS8471Q_FFMT_SRC_xhp_BIT;
+    
+    if(xhe==1){
+        if(xhp==0){
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to +x\r\n");
+            #endif
+        }else{
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to -x\r\n");
+            #endif
+        }
+    }
+    if(yhe==1){
+        if(yhp==0){
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to +y\r\n");
+            #endif
+        }else{
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to -y\r\n");
+            #endif
+        }
+    }
+    if(xhe==1){
+        if(zhp==0){
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to +z\r\n");
+            #endif
+        }else{
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Motion to -z\r\n");
+            #endif
+        }
+    }
+    
+}
+
 /* @brief Manage the portrait landscape interrupt.
  * @param none
  * @return none
@@ -281,15 +349,16 @@ void fxls8471q_init(void){
         Printf("FXLS8471Q connected !\r\n");
         #endif
         fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
-        fxls8471q_calibrate();
-        fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-2G
+        fxls8471q_calibrate(FXLS8471Q_FS_4);
+        fxls8471q_setFullScaleRange(FXLS8471Q_FS_4); //range of +-4G
         //fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
-        fxls8471q_setODR(FXLS8471Q_ODR_50);  //
+        fxls8471q_setODR(FXLS8471Q_ODR_100);  //
         fxls8471q_setMods(FXLS8471Q_PM_HR);
         //fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
         //fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
-        fxls8471q_configureOrientationDetection();
-        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_OFF, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
+        //fxls8471q_configureOrientationDetection();
+        fxls8471q_configureMotionDetection();
+        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_OFF, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
         fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
         I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG3, 0x00); // RESET the CTRL_REG3 register
         fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
@@ -342,24 +411,29 @@ Purpose:  Calibrate the accelerometer. Must be in flat position
 Input:    none
 Returns:  none
 **************************************************************************/
-void fxls8471q_calibrate()
+void fxls8471q_calibrate(uint8_t mode)
 {
     int16_t fxls8471q[3]={0,0,0};
     int8_t offset[3]={0,0,0};
+    uint8_t divide=0;
+    // Set divide to correct value
+    if(mode==FXLS8471Q_FS_2)divide=8;
+    else if(mode==FXLS8471Q_FS_4)divide=4;
+    else if(mode==FXLS8471Q_FS_8)divide=2;
     
     // Configuration 
     fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
     fxls8471q_setODR(FXLS8471Q_ODR_200); // 200Hz
-    fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //+-2g
+    fxls8471q_setFullScaleRange(mode); //+-2g
     
     // Get values
     fxls8471q_switchMode(FXLS8471Q_MODE_WAKE); //switch to standby mode
     fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
     
     // Calculate offset correction value for each axis  
-    fxls8471q[0]=(fxls8471q[0]/8);
-    fxls8471q[1]=(fxls8471q[0]/8);
-    fxls8471q[2]=((4096-fxls8471q[2])/8);
+    fxls8471q[0]=(fxls8471q[0]/divide);
+    fxls8471q[1]=(fxls8471q[0]/divide);
+    fxls8471q[2]=((4096-fxls8471q[2])/divide);
     offset[0]=-fxls8471q[0];
     offset[1]=-fxls8471q[1];
     offset[2]=fxls8471q[2];
@@ -393,6 +467,23 @@ void fxls8471q_configureOrientationDetection(void)
     // Set the debounce counter
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_COUNT, FXLS8471Q_PL_COUNT_dbnce_BIT, FXLS8471Q_PL_COUNT_dbnce_LENGTH, FXLS8471Q_ODR_12_5);
 }
+
+/*************************************************************************
+Function: fxls8471q_configureMotionDetection()
+Purpose:  Configure the accelerometer to detect the motion
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureMotionDetection(void){
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+    // Set configuration register for motion detection
+    fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
+    // Set the threshold value
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); // >3g : 3g/0.063g=47.6
+    // Set the debounce counter to eliminate false reading (see Table 89)
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x0A); 
+}
+
 /*************************************************************************
 Function: fxls8471q_configureInterrupt()
 Purpose:  Configure the interruptions in the accelerometer
@@ -445,6 +536,9 @@ void fxls8471q_checkSourceInterrupt(void)
     
     if(sourceI[0] & FXLS8471Q_INT_SOURCE_lndprt){
         fxls8471q_managePortraitLandscape();
+    }
+    if(sourceI[0] & FXLS8471Q_INT_SOURCE_ffmt){
+        fxls8471q_manageMotion();
     }
 }
 /*************************************************************************

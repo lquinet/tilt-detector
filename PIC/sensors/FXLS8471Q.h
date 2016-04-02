@@ -126,6 +126,11 @@ LICENSE:
 #define FXLS8471Q_BAFRO_FRONT   0x00
 #define FXLS8471Q_BAFRO_BACK    0x01
 
+// <<Freefall/Motion Detection>>
+// Freefall/motion enable/disable in A_FFMT_CFG
+#define FXLS8471Q_FFMT_ENABLE   0x01
+#define FXLS8471Q_FFMT_DISABLE  0x00
+
 // <<Interruptions>>
 // Interruption configuration
 #define FXLS8471Q_INT_aslp_OFF      0x00
@@ -181,10 +186,10 @@ extern void fxls8471q_init(void);
 extern uint8_t fxls8471q_testConnection(void);
 /**
  *  @brief   Calibrate the accelerometer and write offset in device register.
- *  @param   none
+ *  @param   mode FXLS8471Q_FS_X
  *  @return  none
  */
-extern void fxls8471q_calibrate(void);
+extern void fxls8471q_calibrate(uint8_t mode);
 /**
  *  @brief   Read the acceleration value in the accelerometer.
  *  @param   x,y,z int16 pointer with the accelerometer value of the corresponding axis
@@ -197,6 +202,12 @@ extern void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z);
  *  @return  none
  */
 extern void fxls8471q_configureOrientationDetection(void);
+/**
+ *  @brief   Configure the accelerometer to detect the motion.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_configureMotionDetection(void);
 /**
  *  @brief   Configure the interruptions in the accelerometer.
  *  @param   XLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
