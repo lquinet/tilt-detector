@@ -45,7 +45,18 @@ LICENSE:
 // Interrupt source register
 #define FXLS8471Q_INT_SOURCE 0x0C
 
-// Portrait/Landscape Detection
+// Sensor data configuration
+#define FXLS8471Q_XYZ_DATA_CFG0 0x0E   
+#define FXLS8471Q_XYZ_fs_BIT    0x0
+#define FXLS8471Q_XYZ_fs_LENGTH 2
+
+// Offset correction
+#define FXLS8471Q_OFF_X 0x2F
+#define FXLS8471Q_OFF_Y 0x30
+#define FXLS8471Q_OFF_Z 0x31
+
+// <<Portrait/Landscape Detection>>
+// Status register
 #define FXLS8471Q_PL_STATUS     0x10
 #define FXLS8471Q_PL_STATUS_lapo_BIT        2
 #define FXLS8471Q_PL_STATUS_lapo_LENGTH     2
@@ -53,22 +64,48 @@ LICENSE:
 #define FXLS8471Q_PL_STATUS_bafro_LENGTH    1
 #define FXLS8471Q_PL_STATUS_newlp_BIT       7
 #define FXLS8471Q_PL_STATUS_newlp_LENGTH    1
-#define FXLS8471Q_PL_CFG        0x11
+// Activate/desactive portrait/landscape detection
+#define FXLS8471Q_PL_CFG        0x11 
 #define FXLS8471Q_PL_CFG_plen_BIT           6
 #define FXLS8471Q_PL_CFG_plen_LENGTH        1
-#define FXLS8471Q_PL_COUNT      0x12 // This register sets the debounce count for the orientation state transition.
+// Register to set the debounce count for the orientation state transition.
+#define FXLS8471Q_PL_COUNT      0x12 
 #define FXLS8471Q_PL_COUNT_dbnce_BIT        7
 #define FXLS8471Q_PL_COUNT_dbnce_LENGTH     8
-#define FXLS8471Q_PL_BF_ZCOMP   0x13 // Back/Front and Z-tilt angle compensation register
+// Back/Front and Z-tilt angle compensation register
+#define FXLS8471Q_PL_BF_ZCOMP   0x13 
 #define FXLS8471Q_PL_BF_ZCOMP_bkdr_BIT      7
 #define FXLS8471Q_PL_BF_ZCOMP_bkdr_LENGTH   2
 #define FXLS8471Q_PL_BF_ZCOMP_zlock_BIT     2
 #define FXLS8471Q_PL_BF_ZCOMP_zlock_LENGTH  3
-#define FXLS8471Q_PL_THS_REG    0x14 // Portrait to landscape trip threshold registers
+// Portrait to landscape trip threshold register
+#define FXLS8471Q_PL_THS_REG    0x14 
 #define FXLS8471Q_PL_THS_REG_plths_BIT      7
 #define FXLS8471Q_PL_THS_REG_plths_LENGTH   5
 #define FXLS8471Q_PL_THS_REG_hys_BIT        2
 #define FXLS8471Q_PL_THS_REG_hys_LENGTH     3
+
+// <<Freefall/Motion Detection>>
+// Freefall/Motion Configuration
+#define FXLS8471Q_FFMT_CFG      0x15
+#define FXLS8471Q_FFMT_CFG_ele_BIT  7
+#define FXLS8471Q_FFMT_CFG_oae_BIT  6
+#define FXLS8471Q_FFMT_CFG_zefe_BIT 5
+#define FXLS8471Q_FFMT_CFG_yefe_BIT 4
+#define FXLS8471Q_FFMT_CFG_xefe_BIT 3
+// Freefall/Motion Source register
+#define FXLS8471Q_FFMT_SRC      0x16
+#define FXLS8471Q_FFMT_SRC_ea_BIT   7
+#define FXLS8471Q_FFMT_SRC_zhe_BIT  5
+#define FXLS8471Q_FFMT_SRC_zhp_BIT  4
+#define FXLS8471Q_FFMT_SRC_yhe_BIT  3
+#define FXLS8471Q_FFMT_SRC_yhp_BIT  2
+#define FXLS8471Q_FFMT_SRC_xhe_BIT  1
+#define FXLS8471Q_FFMT_SRC_xhp_BIT  0
+// Freefall/motion detection threshold register
+#define FXLS8471Q_FFMT_THS      0x17
+// Debounce count register for freefall/motion detection events
+#define FXLS8471Q_FFMT_COUNT    0x18
 
 // CTRL_REG1 configuration
 #define FXLS8471Q_CTRL_REG1     0x2A   
@@ -88,16 +125,7 @@ LICENSE:
 #define FXLS8471Q_CTRL_REG2_smods_BIT    4
 #define FXLS8471Q_CTRL_REG2_smods_LENGTH 2
 
-// Sensor data configuration
-#define FXLS8471Q_XYZ_DATA_CFG0 0x0E   
-#define FXLS8471Q_XYZ_fs_BIT    0x0
-#define FXLS8471Q_XYZ_fs_LENGTH 2
-
-// Offset correction
-#define FXLS8471Q_OFF_X 0x2F
-#define FXLS8471Q_OFF_Y 0x30
-#define FXLS8471Q_OFF_Z 0x31
-
+// CTRL_REG3 -- Interrupt control register
 #define FXLS8471Q_CTRL_REG3     0x2C
 
 // CTRL_REG4 -- Interrupt enable register
