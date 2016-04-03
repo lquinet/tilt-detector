@@ -77,10 +77,18 @@ TASK(TASK_Main)
     fxls8471q_debug(FXLS8471Q_PL_COUNT);
     fxls8471q_debug(FXLS8471Q_PL_BF_ZCOMP);
     fxls8471q_debug(FXLS8471Q_PL_THS_REG);*/
-    //Motion detection
+    //Motion/Freefall detection
     /*fxls8471q_debug(FXLS8471Q_FFMT_CFG);
     fxls8471q_debug(FXLS8471Q_FFMT_THS);
     fxls8471q_debug(FXLS8471Q_FFMT_COUNT);*/
+    //Tap detection
+    /*fxls8471q_debug(FXLS8471Q_PULSE_CFG);
+    fxls8471q_debug(FXLS8471Q_PULSE_THSX);
+    fxls8471q_debug(FXLS8471Q_PULSE_THSY);
+    fxls8471q_debug(FXLS8471Q_PULSE_THSZ);
+    fxls8471q_debug(FXLS8471Q_PULSE_TMLT);
+    fxls8471q_debug(FXLS8471Q_PULSE_LTCY);
+    fxls8471q_debug(FXLS8471Q_PULSE_WIND);*/
     
     //SetRelAlarm(ALARM_TSK0, 1000, 1000);
     while(1){
