@@ -203,6 +203,29 @@ void fxls8471q_setFFMT_CFG(uint8_t ele, uint8_t oae, uint8_t zefe, uint8_t yefe,
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_CFG, intRegister);
 }
 
+/* @brief Set the configuration for either single Tap/double tap or both.
+ * @param tap FXLS8471Q_PULSE_SINGLE, FXLS8471Q_PULSE_DOUBLE or FXLS8471Q_PULSE_BOTH
+ * @return none
+ */
+void fxls8471q_setPULSE_CFG(uint8_t tap){
+    uint8_t pulseRegister=0;
+    
+    switch(tap){
+        case FXLS8471Q_PULSE_SINGLE:
+            pulseRegister=0x55; // X, Y and Z configured for Single Tap with Latch enabled
+            break;
+        case FXLS8471Q_PULSE_DOUBLE:
+            pulseRegister=0x6A; // X, Y and Z configured for Double Tap with Latch enabled
+            break;
+        case FXLS8471Q_PULSE_BOTH:
+            pulseRegister=0x7F; //  X, Y and Z configured for Single Tap and Double Tap with Latch enabled
+            break;
+        default:
+            break;
+    }
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_CFG, pulseRegister);
+}
+
 /* @brief Manage the portrait landscape interrupt.
  * @param none
  * @return none
@@ -256,13 +279,69 @@ void fxls8471q_manageMotion(void){
     
 }
 
+/* @brief Manage the tap dection interrupt.
+ * @param none
+ * @return none
+ */
+void fxls8471q_manageTap(void){
+    uint8_t rawVal[1];
+
+    I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_SRC, 1, &rawVal[0]);
+    
+    if(rawVal[0]&FXLS8471Q_PULSE_SRC_EVENT){
+        if(rawVal[0]&FXLS8471Q_PULSE_SRC_DPE){
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Double Tap on ");
+            #endif
+        }else{
+            #ifdef DEBUG_FXLS8471Q
+            Printf("Single Tap on ");
+            #endif
+        }
+        if(rawVal[0]&FXLS8471Q_PULSE_SRC_X_AXIS){
+            if(rawVal[0]&FXLS8471Q_PULSE_SRC_X_POL){
+                #ifdef DEBUG_FXLS8471Q
+                Printf("x (negative)\r\n");
+                #endif
+            }else{
+                #ifdef DEBUG_FXLS8471Q
+                Printf("x (positive)\r\n");
+                #endif
+            }
+        }
+        if(rawVal[0]&FXLS8471Q_PULSE_SRC_Y_AXIS){
+            if(rawVal[0]&FXLS8471Q_PULSE_SRC_Y_POL){
+                #ifdef DEBUG_FXLS8471Q
+                Printf("y (negative)\r\n");
+                #endif
+            }else{
+                #ifdef DEBUG_FXLS8471Q
+                Printf("y (positive)\r\n");
+                #endif
+            }
+        }
+        if(rawVal[0]&FXLS8471Q_PULSE_SRC_Z_AXIS){
+            if(rawVal[0]&FXLS8471Q_PULSE_SRC_Z_POL){
+                #ifdef DEBUG_FXLS8471Q
+                Printf("x (negative)\r\n");
+                #endif
+            }else{
+                #ifdef DEBUG_FXLS8471Q
+                Printf("x (positive)\r\n");
+                #endif
+            }
+        }
+    }
+    
+}
+
 /* @brief Manage the portrait landscape interrupt.
  * @param none
  * @return none
  */
 void fxls8471q_managePortraitLandscape(void)
 {   
-    uint8_t rawVal[6];
+    uint8_t rawVal[1];
     uint8_t newlp=0;
 
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, 1, &rawVal[0]);
@@ -350,15 +429,17 @@ void fxls8471q_init(void){
         #endif
         fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
         fxls8471q_calibrate(FXLS8471Q_FS_4);
-        fxls8471q_setFullScaleRange(FXLS8471Q_FS_4); //range of +-4G
+        fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-4G
         //fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
-        fxls8471q_setODR(FXLS8471Q_ODR_100);  //
-        fxls8471q_setMods(FXLS8471Q_PM_HR);
+        fxls8471q_setODR(FXLS8471Q_ODR_200);  //
+        fxls8471q_setMods(FXLS8471Q_PM_LP);
         //fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
         //fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
         //fxls8471q_configureOrientationDetection();
-        fxls8471q_configureMotionDetection();
-        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_OFF, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
+        //fxls8471q_configureMotionDetection();
+        //fxls8471q_configureFreefallDetection();
+        fxls8471q_configureTapDetection();
+        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_OFF, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_OFF, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
         fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
         I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG3, 0x00); // RESET the CTRL_REG3 register
         fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
@@ -477,11 +558,49 @@ Returns:  none
 void fxls8471q_configureMotionDetection(void){
     fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
     // Set configuration register for motion detection
-    fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
+    fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_MOTION, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
     // Set the threshold value
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); // >3g : 3g/0.063g=47.6
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); // >1g : 1g/0.063g=16
     // Set the debounce counter to eliminate false reading (see Table 89)
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x0A); 
+}
+
+/*************************************************************************
+Function: fxls8471q_configureMotionDetection()
+Purpose:  Configure the accelerometer to detect the motion
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureFreefallDetection(void){
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+    // Set configuration register for freefall detection
+    fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_FREEFALL, FXLS8471Q_FFMT_ENABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
+    // Set the threshold value
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x03); // <0.2g : 0.2g/0.063g=3
+    // Set the debounce counter to eliminate false reading (see Table 89)
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x06); 
+}
+
+/*************************************************************************
+Function: fxls8471q_configureMotionDetection()
+Purpose:  Configure the accelerometer to detect a double tap
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureTapDetection(void){
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+    // Enable X,Y, Z single pulse and X,Y,Z double pulse
+    fxls8471q_setPULSE_CFG(FXLS8471Q_PULSE_BOTH);
+    // Set threshold on X, Y and Z
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSX, 0x20); // 2g/0.063g=32counts
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSY, 0x20); // 2g/0.063g=32counts
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSZ, 0x40); // 4g/0.063g=64counts
+    // Time Limit for Tap detection (see Table 130-131)
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_TMLT, 0x18); // 60ms/2.5ms(@200HZ LP)=24 counts
+    // Latency timer (see Table 134-135)
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_LTCY, 0x28); // 200ms/5ms(@200HZ LP)=40 counts
+    // Set Time Window for second tap (see Table 138-139)
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_WIND, 0x3C); // 300ms/5ms(@200HZ LP)=60 counts
 }
 
 /*************************************************************************
@@ -539,6 +658,9 @@ void fxls8471q_checkSourceInterrupt(void)
     }
     if(sourceI[0] & FXLS8471Q_INT_SOURCE_ffmt){
         fxls8471q_manageMotion();
+    }
+    if(sourceI[0] & FXLS8471Q_INT_SOURCE_pulse){
+        fxls8471q_manageTap();
     }
 }
 /*************************************************************************

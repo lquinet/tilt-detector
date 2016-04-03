@@ -130,6 +130,23 @@ LICENSE:
 // Freefall/motion enable/disable in A_FFMT_CFG
 #define FXLS8471Q_FFMT_ENABLE   0x01
 #define FXLS8471Q_FFMT_DISABLE  0x00
+#define FXLS8471Q_FFMT_FREEFALL 0x00
+#define FXLS8471Q_FFMT_MOTION   0x01
+
+// <<Tap Detection>>
+// Configuration
+#define FXLS8471Q_PULSE_SINGLE  0x00
+#define FXLS8471Q_PULSE_DOUBLE  0x01
+#define FXLS8471Q_PULSE_BOTH    0x02
+// Tap event
+#define FXLS8471Q_PULSE_SRC_EVENT   0x80
+#define FXLS8471Q_PULSE_SRC_Z_AXIS  0x40
+#define FXLS8471Q_PULSE_SRC_Y_AXIS  0x20
+#define FXLS8471Q_PULSE_SRC_X_AXIS  0x10
+#define FXLS8471Q_PULSE_SRC_DPE     0x08
+#define FXLS8471Q_PULSE_SRC_Z_POL   0x04
+#define FXLS8471Q_PULSE_SRC_Y_POL   0x02
+#define FXLS8471Q_PULSE_SRC_X_POL   0x01
 
 // <<Interruptions>>
 // Interruption configuration
@@ -208,6 +225,18 @@ extern void fxls8471q_configureOrientationDetection(void);
  *  @return  none
  */
 extern void fxls8471q_configureMotionDetection(void);
+/**
+ *  @brief   Configure the freefall detection.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_configureFreefallDetection(void);
+/**
+ *  @brief   Configure the accelerometer to detect a double tap.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_configureTapDetection(void);
 /**
  *  @brief   Configure the interruptions in the accelerometer.
  *  @param   XLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
