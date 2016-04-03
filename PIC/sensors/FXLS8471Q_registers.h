@@ -107,6 +107,22 @@ LICENSE:
 // Debounce count register for freefall/motion detection events
 #define FXLS8471Q_FFMT_COUNT    0x18
 
+// <<Single/Double Tap Detection>>
+// Pulse configuration register
+#define FXLS8471Q_PULSE_CFG     0x21
+// Pulse source register
+#define FXLS8471Q_PULSE_SRC     0x22
+// Pulse threshold for X,Y and Z registers
+#define FXLS8471Q_PULSE_THSX    0x23
+#define FXLS8471Q_PULSE_THSY    0x24
+#define FXLS8471Q_PULSE_THSZ    0x25
+// Pulse time window 1 register
+#define FXLS8471Q_PULSE_TMLT    0x26
+// Pulse latency timer register
+#define FXLS8471Q_PULSE_LTCY    0x27
+// Second pulse time window register
+#define FXLS8471Q_PULSE_WIND    0x28
+
 // CTRL_REG1 configuration
 #define FXLS8471Q_CTRL_REG1     0x2A   
 #define FXLS8471Q_CTRL_REG1_active_BIT     0 
