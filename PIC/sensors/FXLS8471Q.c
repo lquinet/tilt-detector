@@ -13,7 +13,7 @@
 /************************************************************************/
 /* Constants and macros                                                 */
 /************************************************************************/
-volatile uint8_t prevLapo=0x10; 
+volatile uint8_t prevLapo=FXLS8471Q_BAFRO_FRONT; 
 /************************************************************************/
 /* Private functions                                                    */
 /************************************************************************/
@@ -373,6 +373,7 @@ void fxls8471q_managePortraitLandscape(void)
             #ifdef DEBUG_FXLS8471Q
             Printf("Flat position!\r\n");
             #endif
+            prevLapo=0x10; //reset
         }else{
             prevLapo=lapo;
             switch(lapo){
@@ -423,27 +424,11 @@ void fxls8471q_init(void){
     FXLS8471Q_RST_PORT = 0;
     
     //1. Check if the device is connected
-    if(fxls8471q_testConnection()==1){
+    if(fxls8471q_testConnection()){
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q connected !\r\n");
         #endif
-        fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
-        fxls8471q_calibrate(FXLS8471Q_FS_4);
-        fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-4G
-        //fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
-        fxls8471q_setODR(FXLS8471Q_ODR_200);  //
-        fxls8471q_setMods(FXLS8471Q_PM_LP);
-        //fxls8471q_setSMods(FXLS8471Q_PM_LNLP);
-        //fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
-        //fxls8471q_configureOrientationDetection();
-        //fxls8471q_configureMotionDetection();
-        //fxls8471q_configureFreefallDetection();
-        fxls8471q_configureTapDetection();
-        fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_OFF, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_OFF, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
-        fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
-        I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG3, 0x00); // RESET the CTRL_REG3 register
-        fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
-        
+        fxls8471q_configure();
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q initialisation finished !\r\n");
         #endif
@@ -525,16 +510,46 @@ void fxls8471q_calibrate(uint8_t mode)
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_Y, offset[1]);
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_OFF_Z, offset[2]);
 }
+/*************************************************************************
+Function: fxls8471q_configure()
+Purpose:  Configure the accelerometer
+Input:    none
+Returns:  none
+**************************************************************************/
+void fxls8471q_configure(void){
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
+    fxls8471q_calibrate(FXLS8471Q_FS_2); // calibrate to use +-2g
+    fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-2g
+    // Configure Sleep
+    fxls8471q_setSleep(FXLS8471Q_SLEEP_ON);
+    // Configure Sleep awake
+    fxls8471q_setASPLRate(FXLS8471Q_ASPL_1_56);  //set auto-wake sample frequency
+    fxls8471q_setSMods(FXLS8471Q_PM_LP);
+    // When awake
+    fxls8471q_setODR(FXLS8471Q_ODR_100); //set DR=100Hz
+    fxls8471q_setMods(FXLS8471Q_PM_HR);
+    // Configure the features activated
+    fxls8471q_configureOrientationDetection(0x00);
+    fxls8471q_configureTapDetection(); // to implement ? need a more precise configuration -> higher DR ?
+    //fxls8471q_configureMotionDetection();
+    //fxls8471q_configureFreefallDetection();
+    
+    // Configure interruptions
+    fxls8471q_configureSleepInterrupt(FXLS8471Q_INT_trans_ON, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF);
+    fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_ON, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
+    fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
+    
+    // Set mode to wake
+    fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
+}
 
 /*************************************************************************
 Function: fxls8471q_configureOrientationDetection()
 Purpose:  Configure the accelerometer to detect the orientation
-Input:    none
+Input:    dbnce is determined by the system ODR value and the value of the PL_COUNT register
 Returns:  none
 **************************************************************************/
-void fxls8471q_configureOrientationDetection(void)
-{
-    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
+void fxls8471q_configureOrientationDetection(uint8_t dbnce){
     // Enable the orientation detection
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_CFG, FXLS8471Q_PL_CFG_plen_BIT, FXLS8471Q_PL_CFG_plen_LENGTH, FXLS8471Q_PL_ON);
     // Set the Back/Front Angle trip points
@@ -545,8 +560,8 @@ void fxls8471q_configureOrientationDetection(void)
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_plths_BIT, FXLS8471Q_PL_THS_REG_plths_LENGTH, FXLS8471Q_THS_30);
     // Set the Hysteresis Angle 
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_hys_BIT, FXLS8471Q_PL_THS_REG_hys_LENGTH, FXLS8471Q_HYS_3);
-    // Set the debounce counter
-    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_COUNT, FXLS8471Q_PL_COUNT_dbnce_BIT, FXLS8471Q_PL_COUNT_dbnce_LENGTH, FXLS8471Q_ODR_12_5);
+    // Set the debounce counter (see table 65))
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_COUNT, FXLS8471Q_PL_COUNT_dbnce_BIT, FXLS8471Q_PL_COUNT_dbnce_LENGTH, dbnce);
 }
 
 /*************************************************************************
@@ -556,7 +571,6 @@ Input:    none
 Returns:  none
 **************************************************************************/
 void fxls8471q_configureMotionDetection(void){
-    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
     // Set configuration register for motion detection
     fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_MOTION, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
     // Set the threshold value
@@ -572,7 +586,6 @@ Input:    none
 Returns:  none
 **************************************************************************/
 void fxls8471q_configureFreefallDetection(void){
-    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
     // Set configuration register for freefall detection
     fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_FREEFALL, FXLS8471Q_FFMT_ENABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
     // Set the threshold value
@@ -588,19 +601,38 @@ Input:    none
 Returns:  none
 **************************************************************************/
 void fxls8471q_configureTapDetection(void){
-    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY);
     // Enable X,Y, Z single pulse and X,Y,Z double pulse
     fxls8471q_setPULSE_CFG(FXLS8471Q_PULSE_BOTH);
     // Set threshold on X, Y and Z
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSX, 0x20); // 2g/0.063g=32counts
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSY, 0x20); // 2g/0.063g=32counts
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_THSZ, 0x40); // 4g/0.063g=64counts
-    // Time Limit for Tap detection (see Table 130-131)
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_TMLT, 0x18); // 60ms/2.5ms(@200HZ LP)=24 counts
-    // Latency timer (see Table 134-135)
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_LTCY, 0x28); // 200ms/5ms(@200HZ LP)=40 counts
-    // Set Time Window for second tap (see Table 138-139)
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_WIND, 0x3C); // 300ms/5ms(@200HZ LP)=60 counts
+    // Time Limit for Tap detection (see Table 130-131) ; e.g. : 60ms/2.5ms(@200HZ LP)=24 counts
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_TMLT, 0x0C); //
+    // Latency timer (see Table 134-135) ; e.g. : 200ms/5ms(@200HZ LP)=40 counts
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_LTCY, 0x14); // 
+    // Set Time Window for second tap (see Table 138-139) ; e.g. : 300ms/5ms(@200HZ LP)=60 counts
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PULSE_WIND, 0x1E); // 
+}
+
+/*************************************************************************
+Function: fxls8471q_configureSleepInterrupt()
+Purpose:  Configure the interruptions that can wake the accelerometer
+Input:    FXLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
+Returns:  none
+**************************************************************************/
+void fxls8471q_configureSleepInterrupt(uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm){
+    uint8_t intRegister =0;
+    intRegister |= 0 << FXLS8471Q_CTRL_REG3_fifo_BIT;
+    intRegister |= trans << FXLS8471Q_CTRL_REG3_trans_BIT;
+    intRegister |= lndprt << FXLS8471Q_CTRL_REG3_lndprt_BIT;
+    intRegister |= pulse << FXLS8471Q_CTRL_REG3_pulse_BIT;
+    intRegister |= ffmt << FXLS8471Q_CTRL_REG3_ffmt_BIT;
+    intRegister |= avecm << FXLS8471Q_CTRL_REG3_avecm_BIT;
+    intRegister |= 0 << FXLS8471Q_CTRL_REG3_ipol_BIT;
+    intRegister |= 0 << FXLS8471Q_CTRL_REG3_ppod_BIT;
+    
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_CTRL_REG3, intRegister);
 }
 
 /*************************************************************************
@@ -651,7 +683,9 @@ Returns:  none
 void fxls8471q_checkSourceInterrupt(void)
 {
     uint8_t sourceI[1]={0};
+    //uint8_t sysMod[1]={0};
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_INT_SOURCE, 1, &sourceI[0]);
+    //I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_SYSMOD, 1, &sysMod[0]);
     
     if(sourceI[0] & FXLS8471Q_INT_SOURCE_lndprt){
         fxls8471q_managePortraitLandscape();

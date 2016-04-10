@@ -208,6 +208,12 @@ extern uint8_t fxls8471q_testConnection(void);
  */
 extern void fxls8471q_calibrate(uint8_t mode);
 /**
+ *  @brief   Configure the accelerometer.
+ *  @param   none
+ *  @return  none
+ */
+extern void fxls8471q_configure(void);
+/**
  *  @brief   Read the acceleration value in the accelerometer.
  *  @param   x,y,z int16 pointer with the accelerometer value of the corresponding axis
  *  @return  none
@@ -215,10 +221,10 @@ extern void fxls8471q_calibrate(uint8_t mode);
 extern void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z);
 /**
  *  @brief   Configure the accelerometer to detect the orientation.
- *  @param   none
+ *  @param   dbnce is determined by the system ODR value and the value of the PL_COUNT register
  *  @return  none
  */
-extern void fxls8471q_configureOrientationDetection(void);
+extern void fxls8471q_configureOrientationDetection(uint8_t dbnce);
 /**
  *  @brief   Configure the accelerometer to detect the motion.
  *  @param   none
@@ -238,8 +244,14 @@ extern void fxls8471q_configureFreefallDetection(void);
  */
 extern void fxls8471q_configureTapDetection(void);
 /**
+ *  @brief   Configure the interruptions that can wake the accelerometer.
+ *  @param   FXLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
+ *  @return  none
+ */
+extern void fxls8471q_configureSleepInterrupt(uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm);
+/**
  *  @brief   Configure the interruptions in the accelerometer.
- *  @param   XLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
+ *  @param   FXLS8471Q_INT_X_ON or FXLS8471Q_INT_X_OFF
  *  @return  none
  */
 extern void fxls8471q_configureInterrupt(uint8_t aslp, uint8_t fifo, uint8_t trans, uint8_t lndprt, uint8_t pulse, uint8_t ffmt, uint8_t avecm, uint8_t drdy);
