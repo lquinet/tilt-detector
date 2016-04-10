@@ -55,6 +55,9 @@ LICENSE:
 #define FXLS8471Q_OFF_Y 0x30
 #define FXLS8471Q_OFF_Z 0x31
 
+// Sysmod register
+#define FXLS8471Q_SYSMOD    0x0B
+
 // <<Portrait/Landscape Detection>>
 // Status register
 #define FXLS8471Q_PL_STATUS     0x10
@@ -143,6 +146,15 @@ LICENSE:
 
 // CTRL_REG3 -- Interrupt control register
 #define FXLS8471Q_CTRL_REG3     0x2C
+#define FXLS8471Q_CTRL_REG3_fifo_BIT    7
+#define FXLS8471Q_CTRL_REG3_trans_BIT   6
+#define FXLS8471Q_CTRL_REG3_lndprt_BIT  5
+#define FXLS8471Q_CTRL_REG3_pulse_BIT   4
+#define FXLS8471Q_CTRL_REG3_ffmt_BIT    3
+#define FXLS8471Q_CTRL_REG3_avecm_BIT   2
+#define FXLS8471Q_CTRL_REG3_ipol_BIT    1
+#define FXLS8471Q_CTRL_REG3_ppod_BIT    0
+
 
 // CTRL_REG4 -- Interrupt enable register
 #define FXLS8471Q_CTRL_REG4     0x2D 
