@@ -69,7 +69,9 @@
 #define TIMEOUT_EVENT       0x08
 
 //TASK Main
-#define ALARM_EVENT       	0x02
+#define DELAY_EVENT       	0x02
+#define RTCC_EVENT          0x03
+#define M24LR04E_EVENT      0x04
 
 //DRV_RS
 #define RS_NEW_MSG          0x10
@@ -86,8 +88,10 @@
 
 /***********************************************************************
  * ----------------------------- Task ALARM ---------------------------
+ * ID de l'alarme programmée.
+ * Index du tableau Alarm_list dans le fichier tascdesc.c.
  **********************************************************************/
-#define ALARM_TASK_Main     	0
+#define ALARM_TASK_Main_Delay 	0
 #define I2C_TIMEOUT_ALARM       2
 
 
