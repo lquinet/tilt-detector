@@ -36,3 +36,6 @@
 *.i
 PIC/TiltDetector.X/build/
 PIC/TiltDetector.X/dist/
+PIC/Include/
+PIC/Kernel/
+PIC/Linker/
