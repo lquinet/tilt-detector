@@ -81,7 +81,7 @@
 #pragma config WPDIS = OFF      // Write Protect Disable bit (WPFP<5:0>/WPEND region ignored)
 
 #include "define.h"
-
+#include "user.h"
 
 /**********************************************************************
  * Definition dedicated to the local functions.
@@ -148,6 +148,10 @@ void PIN_MANAGER_Initialize(void)
     ANCON0=0xFF ; //Enable AN0-AN7 in Digital mode
     ANCON1=0x7F ; //Enable AN8-AN15 in Digital mode
 
+    // I/O PORTS
+    TRISLedGreen=0;LedGreen=0;
+    TRISLedRed=0;LedRed=0;
+    
     //*****************************************
     //************* Intrerruption *************
     //*****************************************
