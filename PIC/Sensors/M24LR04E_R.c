@@ -13,7 +13,7 @@ boolean isMemoryFull;
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
-void WaitEepResponse (void);
+void WaitEepResponse (uint8_t address);
 
 /**
  * @brief this function checks if a NDEF message is available in the M24LR04E-R EEPROM
@@ -121,6 +121,30 @@ ErrorStatus User_GetNDEFMessage(uint8_t PayloadLength, uint8_t *NDEFmessage)
     //
     //    return SUCCESS;
 }
+
+void M24LR04E_Init (void)
+{
+    // Save the Capabylity Container in M24LR04E
+    M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
+    // RF_WIP_BUSY in input
+    TRISRF_WIP_BUSY = 1;
+    
+    // Set INT1 on the pin RF_WIP_BUSY (RB1)
+    RPINR1 = 4;// INT1 mapped to RP4 (RB1)
+    INTCON2bits.INTEDG1 = 1; //Interrupt on rising edge
+    INTCON3bits.INT1IE = 1; //Enables the INT1 external interrupt
+    INTCON3bits.INT1IP = 0; //Low Priority
+    
+    //INTCONbits.INT0IE = 1;
+}
+
+void M24LR04E_CompareIfDataLoggerChange (void)
+{
+    
+}
+
+
 /**
  * @brief this function reads a block of data from the M24LR16E EEPROM .
  * @param[in] pBuffer pointer to the buffer that receives the data read
@@ -155,7 +179,10 @@ StatusType M24LR04E_ReadBuffer(I2C_message_t *MemMsg, uint8_t address, IntTo8_t 
     // 1 = SMBbus Enabled, 0 = Disabled
     MemMsg->flags.SMBus = 0;
     MemMsg->next = 0;
-
+    
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
     I2C_enqMsg(MemMsg);
     SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
     WaitEvent(I2C_QUEUE_EMPTY);
@@ -199,6 +226,9 @@ uint8_t M24LR04E_ReadOneByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t su
     MemMsg->flags.SMBus = 0;
     MemMsg->next = 0;
 
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
     I2C_enqMsg(MemMsg);
     SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
     WaitEvent(I2C_QUEUE_EMPTY);
@@ -242,6 +272,9 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
 
     pData = data;
 
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
     I2C_enqMsg(MemMsg);
     SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
     WaitEvent(I2C_QUEUE_EMPTY);
@@ -268,7 +301,7 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
 {
     static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
-    char text;
+    char text[NB_MAX_DATA_BYTES];
     
     // Building of a string from the structure data_t
     BuildMessage(text, data);
@@ -284,7 +317,7 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
     {
         IntTo8_t subAddress = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
         
-        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_ADDRESS_USER, subAddress,MemoryFull);
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,MemoryFull);
         isMemoryFull = MemoryFull;
         return E_OS_STATE;
     }
@@ -307,6 +340,9 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
     // Attention important de reseter le flag d'erreur!!!
     MemMsg->flags.error = 0; 
     
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
     // First page write
     I2C_enqMsg(MemMsg);
     SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
@@ -323,7 +359,7 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
     for (i = 4 - (lastSubAddressWrited.LongNb % 4); i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
     {
         // Wait internal writing of the e²p
-        WaitEepResponse();
+        WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
         
         // Send the message to the I2C buffer
         I2C_enqMsg(MemMsg);
@@ -377,8 +413,8 @@ StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
     MemMsg->flags.SMBus = 0;
     MemMsg->flags.error = 0;
 
-    // Wait internal writing of the e²p
-    WaitEepResponse();
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
     
     I2C_enqMsg(MemMsg);
     SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
@@ -396,7 +432,7 @@ StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
  * the end of a page write
  **********************************************************************/
 
-void WaitEepResponse (void){
+void WaitEepResponse ( uint8_t address){
     /*
     // Set up the I2C port
 	TRISB |= 0b00110000;
@@ -420,7 +456,7 @@ void WaitEepResponse (void){
         if (SSPSTATbits.S) {
             // Launch into sending next byte
             SSPSTATbits.S = 0;
-            SSPBUF = M24LR16_EEPROM_ADDRESS_USER & 0xFE;
+            SSPBUF = address & 0xFE;
             while (PIR1bits.SSPIF == 0);
             PIR1bits.SSPIF = 0;
         }
@@ -431,31 +467,33 @@ void WaitEepResponse (void){
 }
 
 void BuildMessage(char *text, data_t data){
-    // char text0, text1, text2, text3, text4, text5, text6, text7, text8, text9, text10, text11, text12, text13, text14, text15, text16;
     
     if (data.type_message == TYPE_ACCEL){
-        text = ( char *) &data;
+        text[0] = data.day;
+        text[1] = data.month;
+        text[2] = data.year;
+        text[3] = data.hour;
+        text[4] = data.min;
+        text[5] = data.sec;
+        text[6] = 0xFF;
+        text[7] = data.type_message;
+        text[8] = data.Xacc.Nb8_B[1];
+        text[9] = data.Xacc.Nb8_B[0];
+        text[10] = data.Yacc.Nb8_B[1];
+        text[11] = data.Yacc.Nb8_B[0];
+        text[12] = data.Zacc.Nb8_B[1];
+        text[13] = data.Zacc.Nb8_B[0];
     }
-    if (data.type_message == TYPE_TEMP){
-        data.Xacc = data.temp;
-        text = ( char *) &data;
-        /*
-        text0 = text[0];
-        text1 = text[1];
-        text2 = text[2];
-        text3 = text[3];
-        text4 = text[4];
-         text5 = text[5];
-         text6 = text[6];
-                text7 = text[7];
-                text8 = text[8];
-                text9 = text[9];
-                text10 = text[10];
-                text11 = text[11];
-                text12 = text[12];
-                text13 = text[13];
-                text14 = text[14];
-                text15 = text[15];
-                text16 = text[16];*/
+    else if (data.type_message == TYPE_TEMP){
+        text[0] = data.day;
+        text[1] = data.month;
+        text[2] = data.year;
+        text[3] = data.hour;
+        text[4] = data.min;
+        text[5] = data.sec;
+        text[6] = 0xFF;
+        text[7] = data.type_message;
+        text[8] = data.temp.Nb8_B[1];
+        text[9] = data.temp.Nb8_B[0];  
     }
 }

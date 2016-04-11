@@ -21,34 +21,54 @@ typedef struct {
     uint8_t sec;
     uint8_t unused;
     uint8_t type_message;
-    uint16_t Xacc;
-    uint16_t Yacc;
-    uint16_t Zacc;
-    uint16_t temp;
+    IntTo8_t Xacc;
+    IntTo8_t Yacc;
+    IntTo8_t Zacc;
+    IntTo8_t temp;
 } data_t;
 
 // I2C addresses
-#define M24LR16_EEPROM_ADDRESS_USER             0xA6 /* I2C DeviceSelect */
-#define M24LR16_EEPROM_ADDRESS_DATE_RTC         0x1FFC // 4 last bytes reserved to store date for RTC
-#define M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER	0x1FF3 // Last adress for datalogger
-#define M24LR16_EEPROM_ADDRESS_FULL_MEMORY      0x1FF9 // If Memory is full, this byte is set to 1
+#define M24LR16_EEPROM_I2C_SLAVE_ADDRESS            0xA6 /* I2C DeviceSelect */
 
+//Memory Organisation for M24LR16-E Datalogger
+#define M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER	0x1FE7 // Last adress for datalogger
+#define M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE   0x1FE8 // If package is down, this byte is set to 1 in the e²p memory
+#define M24LR16_EEPROM_ADDRESS_RF_CHANGE        0x1FE9 // If the android application change a configuration, this byte is set to 1 in the e²p memory
+#define M24LR16_EEPROM_ADDRESS_FULL_MEMORY      0x1FEB // If Memory is full, this byte is set to 1 in the e²p memory
+#define M24LR16_EEPROM_ADDRESS_DATE_RTC         0x1FEC // First address of 6 bytes reserved to store date for RTC
+#define M24LR16_EEPROM_ADDRESS_ACCEL_LIMITS     0x1FF4 // First address of 6 bytes reserved to store acceleration limits for accelerometer
+#define M24LR16_EEPROM_ADDRESS_TEMP_LIMITS      0x1FFC // First address of 4 bytes reserved to store Temperature limits for temperature sensor
+
+/*
 // I2C address for M24LR16-E Datalogger
 #define M24LR04 0x53
-#define M24LR16_EEPROM_ADDRESS_SYSTEM		0xAE /* I2C DeviceSelect */
+#define M24LR16_EEPROM_ADDRESS_SYSTEM		0xAE //I2C DeviceSelect
 #define M24LR16_EEPROM_CONFIGURATION_BYTE       0x2323
 #define WIP_BUSY_MODE_MASK 0x08
 #define RF_BUSY_MODE_MASK 0xF7
+*/
 
 #define MemoryFull 0x01    // e²prom memory full
 #define MemoryNotFull 0x00
 
+#define RF_Change 0x01  // if the Android application change configuration byte
+
+/*********************** PAYLOAD ****************************/
 // Type de message (acceleromètre ou temperature)
 #define TYPE_ACCEL  1
 #define TYPE_TEMP   2
 
 // Nombre de bytes de data pour l'envoyer dans NDEF record
-#define NB_DATA_BYTES   16
+#define NB_MAX_DATA_BYTES   16
+
+// Nombre de bytes dans le payload quand acceleromtètre
+#define NB_DATA_BYTES_ACCEL   14
+
+// Nombre de bytes dans le payload quand acceleromtètre
+#define NB_DATA_BYTES_TEMP   10
+
+// Index du type de message dans le payload
+#define INDEX_MSG_TYPE  7
 
 ErrorStatus User_ReadNDEFMessage(uint8_t *PayloadLength);
 
