@@ -112,9 +112,16 @@ void InterruptVectorL(void)
         mRtcc_Clear_Intr_Status_Bit; //clears the RTCC interrupt status bit
         SetEvent(TASK_Main_ID, RTCC_EVENT);
     }
-    
+	
+	//Accelerometer
+	if (INTCONbits.INT0IF)
+    {
+        SetEvent(TASK_Main_ID, ACC_EVENT);
+        INTCONbits.INT0IF=0;
+    }
+
     // I2C
-    if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
+	if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
         (PIR1bits.SSPIF == 1 && PIE1bits.SSP1IE)) // Check I2C interrupt	(bit3)
     {
         I2C_INT();

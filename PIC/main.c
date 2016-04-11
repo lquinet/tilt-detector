@@ -147,6 +147,14 @@ void PIN_MANAGER_Initialize(void)
     //Set all analog input as digital input.
     ANCON0=0xFF ; //Enable AN0-AN7 in Digital mode
     ANCON1=0x7F ; //Enable AN8-AN15 in Digital mode
+    
+    //Configure accelerometer pin
+    TRISBbits.TRISB0=1;
+    
+    //Configure INT0 on RB0
+    INTCON2bits.INTEDG0=1;// Rising edge on
+    INTCON2bits.RBPU=0; // PORTB Pull-up are disabled
+    INTCON2bits.RBIP=0; // RB port change interrupt in LOW priority
 
     // I/O PORTS
     TRISLedGreen=0;LedGreen=0;

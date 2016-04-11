@@ -53,6 +53,8 @@
 #include "Sensors/EMC1001.h"
 #include "RTCC/MyRTCC.h"
 #include  <dpslp.h> // Pour librairie RTCC
+#include "sensors/FXLS8471Q.h"
+#include "sensors/FXLS8471Q_registers.h"
 
 /**********************************************************************
  * Definition dedicated to the local function
@@ -86,6 +88,7 @@ data_t data;
 
 TASK(TASK_Main)
 {
+
     char str[30] = "";
     IntTo8_t address = 0;
     IntTo8_t subAddress = 0;
@@ -134,6 +137,7 @@ TASK(TASK_Main)
     StatusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
     InitSTTS751();
     M24LR04E_Init();
+	fxls8471q_init();
 
     
     /*
@@ -190,7 +194,7 @@ TASK(TASK_Main)
 
     while (1)
     {
-        WaitEvent(RTCC_EVENT | M24LR04E_EVENT);
+        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACC_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
         
         // RTCC EVENT
@@ -268,6 +272,12 @@ TASK(TASK_Main)
             // Disable INT1 interruptions
             INTCON3bits.INT1IE = 0;
             //LedRed = ~LedRed; //~LATDbits.LATD7;
+        }
+		 // ACC_EVENT
+        if (TASK_Main_event & ACC_EVENT){
+			ClearEvent(ACC_EVENT);
+	
+			fxls8471q_checkSourceInterrupt();
         }
 
         // Disable timer0

@@ -51,6 +51,8 @@
 
 #include "device.h"
 
+#define DEBUG
+
 /***********************************************************************
  * ------------------------ Timer settings -----------------------------
  **********************************************************************/
@@ -72,6 +74,8 @@
 #define DELAY_EVENT       	0x02
 #define RTCC_EVENT          0x03
 #define M24LR04E_EVENT      0x04
+#define ACC_EVENT       	0x05
+
 
 //DRV_RS
 #define RS_NEW_MSG          0x10
