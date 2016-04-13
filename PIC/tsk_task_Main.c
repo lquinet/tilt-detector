@@ -52,7 +52,6 @@
 #include "Sensors/M24LR04E_R.h"
 #include "Sensors/EMC1001.h"
 #include "RTCC/MyRTCC.h"
-#include  <dpslp.h> // Pour librairie RTCC
 #include "sensors/FXLS8471Q.h"
 #include "sensors/FXLS8471Q_registers.h"
 
@@ -93,15 +92,14 @@ TASK(TASK_Main)
     IntTo8_t address = 0;
     IntTo8_t subAddress = 0;
     IntTo8_t temperatureIntTo8 = 0;
+    IntTo8_t Xacc, Yacc, Zacc;
+    uint8_t Acc_event;
     float temperatureFloat=0;
-    uint8_t counterRTCC=0, counterRF_WIP_BUSY=0;
+    uint8_t counterRTCC=1;
     uint8_t StatusPackage=52;
     boolean isRF_WIP_BUSY = 0;
     uint8_t configurationBytes[24];
     uint8_t errorState;
-            
-    //subAddress.LongNb = 0;
-    //data.type_message= TYPE_TEMP; data.day=30; data.month=3; data.year=16; data.hour=15; data.min=43; data.temp.LongNb=26;
     
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
@@ -109,7 +107,7 @@ TASK(TASK_Main)
     StatusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 9);
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 13);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+1;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 4);
@@ -118,10 +116,10 @@ TASK(TASK_Main)
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 16);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+3;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 16);
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 15);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+4;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 8);
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+5;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0);
@@ -138,7 +136,9 @@ TASK(TASK_Main)
     InitSTTS751();
     M24LR04E_Init();
 	fxls8471q_init();
-
+    
+    subAddress.LongNb = 0;
+    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
     
     /*
     //strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
@@ -166,8 +166,8 @@ TASK(TASK_Main)
     */
     
     // Read user configuration from e²p memory
-    address.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
-    errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, address, 24, configurationBytes);
+    subAddress.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
+    errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 24, configurationBytes);
     if (errorState == E_OK){
         // Status Package
         StatusPackage = configurationBytes[0];
@@ -192,6 +192,15 @@ TASK(TASK_Main)
     
     StartRTCC(DateTime);
 
+    // DEBUG
+    Xacc.LongNb = 0xA051;
+    Yacc.LongNb = 0xA052;
+    Zacc.LongNb = 0xA053;
+    Acc_event = 0x01;
+    FXLS8471QSaveNdefMessage( Xacc,  Yacc,  Zacc,  Acc_event);
+    subAddress.LongNb = 0;
+    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+    
     while (1)
     {
         WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACC_EVENT);
@@ -201,28 +210,12 @@ TASK(TASK_Main)
         if (TASK_Main_event & RTCC_EVENT)
         {
             ClearEvent(RTCC_EVENT );
-            counterRTCC++;
-            counterRF_WIP_BUSY++;
-            // Reading Temperature
-            if (counterRTCC == 60)
-            {
-                counterRTCC = 0;
-                // ROUTINE TEMPERATURE
-                ReadTemperatureSTTS751(&temperatureIntTo8);
-                temperatureFloat = ConvertTemperatureSTTS751(temperatureIntTo8);
-                if (temperatureFloat > tempMax){
-                    STTS751SaveNdefMessage(temperatureIntTo8);
-                    subAddress.LongNb = 0;
-                    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-                }
-            } 
             // Toggle LED (toutes les 2 sec)
-            if (counterRTCC%2 == 1) {
+            if (counterRTCC%2 == 0) {
                 if (StatusPackage == ColisDown)
                 {
                     LedGreen = 0;
                     LedRed = 1;
-                 // if(mRtccGetAlarmRpt()==);
                     Delay_ms(100);
                     LedRed = 0;
                 } else
@@ -234,6 +227,25 @@ TASK(TASK_Main)
                     LedGreen = 0;
                 }
             }
+            
+            // Reading Temperature every 60 sec
+            if (counterRTCC%60 == 0){
+                // ROUTINE TEMPERATURE
+                ReadTemperatureSTTS751(&temperatureIntTo8);
+                temperatureFloat = ConvertTemperatureSTTS751(temperatureIntTo8);
+                if (temperatureFloat > tempMax){
+                    STTS751SaveNdefMessage(temperatureIntTo8);
+                    //subAddress.LongNb = 0;
+                    //M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+                }
+            } 
+            
+            // Write DateTime to e²p every 10 min
+            if (counterRTCC == 600) {
+                counterRTCC = 1;
+                writeDateTimeToConfigurationByte(); // Pour éviter que le transporteur ait retiré la pile pendant le trajet
+            }
+            
             // Check if RF_Change
             if (isRF_WIP_BUSY){
                 // Enable INT1 interruptions
@@ -242,36 +254,40 @@ TASK(TASK_Main)
                 address.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
                 errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, address, 24, configurationBytes);
                 if (errorState == E_OK){
-                    // Check if RF change
-                    if (configurationBytes[1] == RF_Change){
+                    // Check if RF change (change config or reset)
+                    if (configurationBytes[1] == RF_Change_WithoutReset || configurationBytes[1] == RF_Change_Reset){
                         // Status Package
-                        if (StatusPackage == ColisDown && configurationBytes[0] == ColisUP){
-                            // RESEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEET!
+                        if (configurationBytes[1] == RF_Change_Reset){
+                            // RESET
+                            Reset();
                         }
-                        // Accelerations limits
-                        accXMax.Nb8_B[1] = configurationBytes[12];
-                        accXMax.Nb8_B[0] = configurationBytes[13];
-                        accYMax.Nb8_B[1] = configurationBytes[14];
-                        accYMax.Nb8_B[0] = configurationBytes[15];
-                        accZMax.Nb8_B[1] = configurationBytes[16];
-                        accZMax.Nb8_B[0] = configurationBytes[17];
+                        if (configurationBytes[1] == RF_Change_WithoutReset){
+                            // Accelerations limits
+                            accXMax.Nb8_B[1] = configurationBytes[12];
+                            accXMax.Nb8_B[0] = configurationBytes[13];
+                            accYMax.Nb8_B[1] = configurationBytes[14];
+                            accYMax.Nb8_B[0] = configurationBytes[15];
+                            accZMax.Nb8_B[1] = configurationBytes[16];
+                            accZMax.Nb8_B[0] = configurationBytes[17];
 
-                        // Temperature limits
-                        temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
-                        temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
-                        tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
+                            // Temperature limits
+                            temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
+                            temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
+                            tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
+                        }
                     }
                 }
             }
+            
+            counterRTCC++;
         } // Fin if RTCC_EVENT
         
         // M24LR04E_EVENT
         if (TASK_Main_event & M24LR04E_EVENT){
             ClearEvent(M24LR04E_EVENT);
-            isRF_WIP_BUSY = 1;
             // Disable INT1 interruptions
             INTCON3bits.INT1IE = 0;
-            //LedRed = ~LedRed; //~LATDbits.LATD7;
+            isRF_WIP_BUSY = 1;
         }
 		 // ACC_EVENT
         if (TASK_Main_event & ACC_EVENT){
@@ -286,7 +302,7 @@ TASK(TASK_Main)
         //SLEEP
         OSCCONbits.IDLEN = 0; // Not in Idle
         WDTCONbits.REGSLP=1; // Regulator Low power
-        //Sleep();
+        Sleep();
     }//Fin while WaitEvent
 }
 
