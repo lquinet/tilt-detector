@@ -42,7 +42,7 @@ LICENSE:
 /************************************************************************/
 
 // DEBUG option through UART
-#define DEBUG_FXLS8471Q 
+//#define DEBUG_FXLS8471Q 
 
 // PIN MAPPING
 #define FXLS8471Q_RST_PORT      PORTBbits.RB2

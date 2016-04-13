@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "../drivers/drv_i2c.h"
 #include "../drivers/drv_rs.h"
+#include "../sensors/M24LR04E_R.h"
 
 /************************************************************************/
 /* Constants and macros                                                 */
@@ -362,6 +363,8 @@ void fxls8471q_managePortraitLandscape(void)
                 #ifdef DEBUG_FXLS8471Q
                 Printf("Back orientation and ");
                 #endif
+                IntTo8_t nullValue=0;
+                FXLS8471QSaveNdefMessage(nullValue, nullValue, nullValue, 0x01);
                 break;
             default:
                 #ifdef DEBUG_FXLS8471Q
