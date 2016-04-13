@@ -117,20 +117,3 @@ uint8_t STTS751ReadByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddre
 temp=pData[0];
     return temp;
 }
-
-void STTS751SaveNdefMessage(IntTo8_t temp) 
-{
-    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
-    
-    data.type_message = TYPE_TEMP;
-    data.temp.Nb8_B[1] = temp.Nb8_B[1];
-    data.temp.Nb8_B[0] = temp.Nb8_B[0];
-    data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
-    data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
-    data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
-    data.hour = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
-    data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
-    data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
-    
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
-}

@@ -36,7 +36,6 @@ StatusType STTS751WriteByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subA
 uint8_t STTS751ReadByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddress);
 void ReadTemperatureSTTS751(IntTo8_t *temperature);
 float ConvertTemperatureSTTS751(IntTo8_t temp);
-void STTS751SaveNdefMessage(IntTo8_t temp);
 
 #endif	/* STTS751_H */
 
