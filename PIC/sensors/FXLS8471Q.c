@@ -231,7 +231,7 @@ void fxls8471q_setPULSE_CFG(uint8_t tap){
  * @return none
  */
 void fxls8471q_manageMotion(void){
-    uint8_t rawVal[6];
+    uint8_t rawVal[1];
     uint8_t ea=0, zhe=0, zhp=0, yhe=0, yhp=0, xhe=0, xhp=0;
 
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_SRC, 1, &rawVal[0]);
@@ -517,6 +517,7 @@ Input:    none
 Returns:  none
 **************************************************************************/
 void fxls8471q_configure(void){
+
     fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
     fxls8471q_calibrate(FXLS8471Q_FS_2); // calibrate to use +-2g
     fxls8471q_setFullScaleRange(FXLS8471Q_FS_2); //range of +-2g
@@ -529,16 +530,16 @@ void fxls8471q_configure(void){
     fxls8471q_setODR(FXLS8471Q_ODR_100); //set DR=100Hz
     fxls8471q_setMods(FXLS8471Q_PM_HR);
     // Configure the features activated
-    fxls8471q_configureOrientationDetection(0x00);
-    fxls8471q_configureTapDetection(); // to implement ? need a more precise configuration -> higher DR ?
-    //fxls8471q_configureMotionDetection();
+    fxls8471q_configureOrientationDetection(0x05); // avoid detection if shaking -- increase if too much interruptions 0x28
+    fxls8471q_configureMotionDetection();
+    //fxls8471q_configureTapDetection();
     //fxls8471q_configureFreefallDetection();
     
     // Configure interruptions
-    fxls8471q_configureSleepInterrupt(FXLS8471Q_INT_trans_ON, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF);
-    fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_ON, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_ON, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
+    fxls8471q_configureSleepInterrupt(FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF);
+    fxls8471q_configureInterrupt(FXLS8471Q_INT_aslp_OFF, FXLS8471Q_INT_fifo_OFF, FXLS8471Q_INT_trans_OFF, FXLS8471Q_INT_lndprt_ON, FXLS8471Q_INT_pulse_OFF, FXLS8471Q_INT_ffmt_ON, FXLS8471Q_INT_avecm_OFF, FXLS8471Q_INT_drdy_OFF);
     fxls8471q_configureRoutingInterrupt(FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1, FXLS8471Q_INT_INT1);
-    
+
     // Set mode to wake
     fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
 }
@@ -553,11 +554,11 @@ void fxls8471q_configureOrientationDetection(uint8_t dbnce){
     // Enable the orientation detection
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_CFG, FXLS8471Q_PL_CFG_plen_BIT, FXLS8471Q_PL_CFG_plen_LENGTH, FXLS8471Q_PL_ON);
     // Set the Back/Front Angle trip points
-    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_PL_BF_ZCOMP_bkdr_BIT, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_BKFR_2);
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_PL_BF_ZCOMP_bkdr_BIT, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_BKFR_3);
     // Set the Z-Lockout angle trip point
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_BF_ZCOMP, FXLS8471Q_PL_BF_ZCOMP_zlock_BIT, FXLS8471Q_PL_BF_ZCOMP_zlock_LENGTH, FXLS8471Q_ZLOCK_28);
     // Set the Trip Threshold Angle 
-    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_plths_BIT, FXLS8471Q_PL_THS_REG_plths_LENGTH, FXLS8471Q_THS_30);
+    fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_plths_BIT, FXLS8471Q_PL_THS_REG_plths_LENGTH, FXLS8471Q_THS_60);
     // Set the Hysteresis Angle 
     fxls8471q_writeBits(FXLS8471Q_ADDRESS, FXLS8471Q_PL_THS_REG, FXLS8471Q_PL_THS_REG_hys_BIT, FXLS8471Q_PL_THS_REG_hys_LENGTH, FXLS8471Q_HYS_3);
     // Set the debounce counter (see table 65))
@@ -573,10 +574,10 @@ Returns:  none
 void fxls8471q_configureMotionDetection(void){
     // Set configuration register for motion detection
     fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_MOTION, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
-    // Set the threshold value
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); // >1g : 1g/0.063g=16
+    // Set the threshold value ; e.g. : >1g : 1g/0.063g=16
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); 
     // Set the debounce counter to eliminate false reading (see Table 89)
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x0A); 
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x00); //0x0a
 }
 
 /*************************************************************************
@@ -588,10 +589,10 @@ Returns:  none
 void fxls8471q_configureFreefallDetection(void){
     // Set configuration register for freefall detection
     fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_FREEFALL, FXLS8471Q_FFMT_ENABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
-    // Set the threshold value
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x03); // <0.2g : 0.2g/0.063g=3
+    // Set the threshold value ; e.g. : <0.2g : 0.2g/0.063g=3
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x0C); // 
     // Set the debounce counter to eliminate false reading (see Table 89)
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x06); 
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x0C); 
 }
 
 /*************************************************************************
@@ -686,7 +687,7 @@ void fxls8471q_checkSourceInterrupt(void)
     //uint8_t sysMod[1]={0};
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_INT_SOURCE, 1, &sourceI[0]);
     //I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_SYSMOD, 1, &sysMod[0]);
-    
+   
     if(sourceI[0] & FXLS8471Q_INT_SOURCE_lndprt){
         fxls8471q_managePortraitLandscape();
     }
