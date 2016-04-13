@@ -93,6 +93,7 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
  *         E_OS_STATE if the I2C access failed
  */
 StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address);
+void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc);
 StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address);
 void BuildMessage(char *text, data_t data);
 
