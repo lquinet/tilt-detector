@@ -24,6 +24,7 @@ typedef struct {
     IntTo8_t Xacc;
     IntTo8_t Yacc;
     IntTo8_t Zacc;
+    uint8_t Acc_event;
     IntTo8_t temp;
 } data_t;
 
@@ -48,10 +49,19 @@ typedef struct {
 #define RF_BUSY_MODE_MASK 0xF7
 */
 
+// Memory_Full
 #define MemoryFull 0x01    // e²prom memory full
 #define MemoryNotFull 0x00
 
-#define RF_Change 0x01  // if the Android application change configuration byte
+// RF_Change
+#define RF_Change_WithoutReset 0x01  // if the Android application change configuration byte without reset
+#define RF_Change_Reset 0x02        // if the Android application force reset
+
+/********************** Capability container ****************/
+#define CC1 0xE1
+#define CC2 0x40
+#define CC3 0xFF
+#define CC4 0x00
 
 /*********************** PAYLOAD ****************************/
 // Type de message (acceleromètre ou temperature)
@@ -62,9 +72,9 @@ typedef struct {
 #define NB_MAX_DATA_BYTES   16
 
 // Nombre de bytes dans le payload quand acceleromtètre
-#define NB_DATA_BYTES_ACCEL   14
+#define NB_DATA_BYTES_ACCEL   15
 
-// Nombre de bytes dans le payload quand acceleromtètre
+// Nombre de bytes dans le payload quand capteur de température
 #define NB_DATA_BYTES_TEMP   10
 
 // Index du type de message dans le payload
@@ -79,6 +89,8 @@ ErrorStatus User_GetPayloadLength(uint8_t *PayloadLength);
 void ToUpperCase(uint8_t NbCar, void *StringToConvert);
 ErrorStatus User_GetNDEFMessage(uint8_t PayloadLength, uint8_t *NDEFmessage);
 StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t data);
+StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t *data, uint8_t NbByteToSend);
+
 
 /** @LOIC:
  **  @name M24LR04E_SaveNdefMessage
@@ -93,10 +105,12 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
  *         E_OS_STATE if the I2C access failed
  */
 StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address);
-void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc);
+void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
+void STTS751SaveNdefMessage(IntTo8_t temp);
 StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address);
 void BuildMessage(char *text, data_t data);
-
+void WaitEepResponse (uint8_t address);
+void writeDateTimeToConfigurationByte (void);
 
 #endif	/* M24LR04E_R_H */
 

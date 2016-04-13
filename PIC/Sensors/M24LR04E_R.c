@@ -13,122 +13,18 @@ extern data_t data;
  * Definition dedicated to the global variable
  **********************************************************************/
 boolean isMemoryFull;
-/**********************************************************************
- * Definition dedicated to the local functions.
- **********************************************************************/
-void WaitEepResponse (uint8_t address);
 
-/**
- * @brief this function checks if a NDEF message is available in the M24LR04E-R EEPROM
- * @par PayloadLength : the number of byte of the NDEF message
- * @retval SUCCESS : A NDEF message has been found
- * @retval ERROR :  a NDEF message doens't have been found
- */
-ErrorStatus User_ReadNDEFMessage(uint8_t *PayloadLength)
-{
-    //    uint8_t NthAttempt = 0,
-    //            NbAttempt = 2;
-    //
-    //    *PayloadLength = 0;
-    //
-    //    for (NthAttempt = 0; NthAttempt < NbAttempt; NthAttempt++)
-    //    {
-    //        //M24LR04E_Init();
-    //        // check if a NDEF message is available in the M24LR04 EEPROM
-    //        if (User_CheckNDEFMessage() == SUCCESS)
-    //        {
-    //            User_GetPayloadLength(PayloadLength);
-    //            if (PayloadLength != 0x00)
-    //            {
-    //                (*PayloadLength) -= 2;
-    //                memset(NDEFmessage, 0, sizeof (NDEFmessage)); //InitializeBuffer(NDEFmessage, (*PayloadLength) + 10);
-    //                User_GetNDEFMessage(*PayloadLength, NDEFmessage);
-    //
-    //                ToUpperCase(*PayloadLength, NDEFmessage);
-    //
-    //                return SUCCESS;
-    //            }
-    //        }
-    //
-    //    }
-    //
-    //    return ERROR;
-}
-
-ErrorStatus User_CheckNDEFMessage(void)
-{
-    //    uint8_t OneByte = 0x00;
-    //    IntTo8_t ReadAddr = 0x0000;
-    //
-    //    // check the E1 at address 0
-    //    OneByte = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, ReadAddr);
-    //    if (OneByte != 0xE1)
-    //        return ERROR;
-    //
-    //    ReadAddr.LongNb = 0x0009;
-    //    OneByte = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, ReadAddr);
-    //    // text or URL message
-    //    if (OneByte != 0x54 /*&& OneByte != 0x55*/)
-    //        return ERROR;
-    //    return SUCCESS;
-}
-
-/**
- * @brief this functions returns the payload length
- * @par Parameters None
- * @retval SUCCESS : the M24LR16E contains a NDEF message
- * @retval ERROR : the M24LR16E donesn't contain a NDEF message
- */
-ErrorStatus User_GetPayloadLength(uint8_t *PayloadLength)
-{
-    //    IntTo8_t ReadAddr = 0x0008;
-    //
-    //    *PayloadLength = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_ADDRESS_USER, ReadAddr);
-    //    if (*PayloadLength == 0x00)
-    //        return ERROR;
-    //
-    //    return SUCCESS;
-}
-
-/**
- * @brief this functions converts a the characters of a string to upper case
- * @par NbCar : Number of byte of StringToConvert field
- * @par StringToConvert : pointer on the string to convert
- * @retval none
- */
-void ToUpperCase(uint8_t NbCar, void *StringToConvert)
-{
-    //    //uint8_t Buffer[0x10] = "\0";//Vérifier la taille !!!
-    //    //memset(Buffer, 0, sizeof (Buffer));
-    //    //Buffer[0] = StringToConvert[0];
-    //    //Buffer = StringToConvert;
-    //    //StringToConvert = strupr(Buffer[0]);
-    //    StringToConvert = strupr((char*)StringToConvert);
-}
-
-/**
- * @brief this functions returns the payload length
- * @par PayloadLength : the number of byte of the NDEF message
- * @par NDEFmessage : pointer on the NDEF message
- * @retval SUCCESS : the M24LR16E contains a NDEF message
- * @retval ERROR : the M24LR16E donesn't contain a NDEF message
- */
-ErrorStatus User_GetNDEFMessage(uint8_t PayloadLength, uint8_t *NDEFmessage)
-{
-    //    IntTo8_t ReadAddr = 0x000D;
-    //
-    //    if (PayloadLength == 0x00)
-    //        return SUCCESS;
-    //
-    //    M24LR04E_ReadBuffer(&My_I2C_Message,M24LR16_EEPROM_ADDRESS_USER, ReadAddr, PayloadLength, NDEFmessage);
-    //
-    //    return SUCCESS;
-}
 
 void M24LR04E_Init (void)
 {
+    IntTo8_t subAddress;
+    
     // Save the Capabylity Container in M24LR04E
     M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
+    // Set the first TLV block to terminator (0xFE) to erase the user memory
+    subAddress.LongNb = 4;
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 4);
     
     // RF_WIP_BUSY in input
     TRISRF_WIP_BUSY = 1;
@@ -288,6 +184,59 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
     return E_OK;
 }
 
+/**********************************************************************
+ *
+ *
+ * @param  MemMsg    	 IN  Mandatory I2C structure
+ * @param
+ * @return Status         E_OK if the M24LR04E has been updated
+ *                        E_OS_STATE if the I2C access failed
+ **********************************************************************/
+StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t *data, uint8_t NbByteToSend)
+{
+    unsigned char pData;
+    uint8_t i = 0, NbByteSended = 0;
+    
+    MemMsg->control = address & 0xFE;
+    //  High byte of addr, only used if high bit set
+    MemMsg->addr_high = subAddress.Nb8_B[1];
+    // First register Adress
+    MemMsg->addr_low = subAddress.Nb8_B[0];
+    // The bit setting of flags.ptr_type
+    MemMsg->ram_data = data;
+    // Must be less than 255
+    MemMsg->num_bytes = NbByteToSend;
+    // 0 = single byte address, 1= two byte address
+    MemMsg->flags.long_addr = 1;
+    // 1 = read from external, 0 = write to external
+    MemMsg->flags.i2c_read = 0;
+    // 1 = SMBbus Enabled, 0 = Disabled
+    MemMsg->flags.SMBus = 0;
+    MemMsg->flags.error = 0; 
+
+    
+    for (i = 0; i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
+    {
+        // Wait previous internal writing of the e²p
+        WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+        
+        // Send the message to the I2C buffer
+        I2C_enqMsg(MemMsg);
+        SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
+        WaitEvent(I2C_QUEUE_EMPTY);
+        ClearEvent(I2C_QUEUE_EMPTY);
+
+        NbByteSended += 4;
+        if ((NbByteToSend - NbByteSended) < 4)
+            MemMsg->num_bytes = (NbByteToSend - NbByteSended);
+        MemMsg->addr_low += 4;
+        MemMsg->ram_data+= 4;
+    }
+    
+    if (MemMsg->flags.error != 0)
+        return E_OS_STATE;
+    return E_OK;
+}
 
 /**********************************************************************
  * Update the M24LR04E with the Time structure passed to the function.
@@ -302,7 +251,7 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
 StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
 
 {
-    static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message
+    static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
     char text[NB_MAX_DATA_BYTES];
     
@@ -382,14 +331,32 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
     return E_OK;
 }
 
-void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc) 
+void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event) 
 {
     RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
     
+    data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
+    data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
+    data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
+    data.hour = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
+    data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
+    data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
     data.type_message = TYPE_ACCEL;
     data.Xacc.LongNb = Xacc.LongNb;
     data.Yacc.LongNb = Yacc.LongNb;
     data.Zacc.LongNb = Zacc.LongNb;
+    data.Acc_event = Acc_event;
+    
+    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+}
+
+void STTS751SaveNdefMessage(IntTo8_t temp) 
+{
+    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
+    
+    data.type_message = TYPE_TEMP;
+    data.temp.Nb8_B[1] = temp.Nb8_B[1];
+    data.temp.Nb8_B[0] = temp.Nb8_B[0];
     data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
     data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
     data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
@@ -415,7 +382,7 @@ StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
 
 {
     // pData[0] = CC1, pData[1] = CC2, pData[2] = CC3, pData[3] = CC4
-    unsigned char pData[4] = {0xE1, 0x40, 0xFF, 0x00};
+    unsigned char pData[4] = {CC1, CC2, CC3, CC4};
         
     MemMsg->control = address & 0xFE;
     //  High byte of addr, only used if high bit set
@@ -504,6 +471,7 @@ void BuildMessage(char *text, data_t data){
         text[11] = data.Yacc.Nb8_B[0];
         text[12] = data.Zacc.Nb8_B[1];
         text[13] = data.Zacc.Nb8_B[0];
+        text[14] = data.Acc_event;
     }
     else if (data.type_message == TYPE_TEMP){
         text[0] = data.day;
@@ -517,4 +485,19 @@ void BuildMessage(char *text, data_t data){
         text[8] = data.temp.Nb8_B[1];
         text[9] = data.temp.Nb8_B[0];  
     }
+}
+
+void writeDateTimeToConfigurationByte (void){
+    uint8_t dateTimeToWrite[6];
+    IntTo8_t subAddress = M24LR16_EEPROM_ADDRESS_DATE_RTC;
+    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
+    
+    dateTimeToWrite[0] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
+    dateTimeToWrite[1] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
+    dateTimeToWrite[2] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
+    dateTimeToWrite[3] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
+    dateTimeToWrite[4] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
+    dateTimeToWrite[5] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
+    
+    M24LR04E_WriteNBytes(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, dateTimeToWrite, 6);
 }
