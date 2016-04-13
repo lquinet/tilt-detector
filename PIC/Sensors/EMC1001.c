@@ -4,6 +4,7 @@
 #include "drivers/drv_i2c.h"
 #include "../Sensors/M24LR04E_R.h"
 #include "EMC1001.h"
+#include "../tsk_task_Main.h"
 
 extern I2C_message_t My_I2C_Message;
 extern data_t data;
