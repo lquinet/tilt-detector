@@ -3,8 +3,11 @@
 #include "user.h"
 #include "M24LR04E_R.h"
 #include "NDEF/NDEFRecord.h"
+#include "../tsk_task_Main.h"
+#include "../RTCC/MyRTCC.h"
 
 extern I2C_message_t My_I2C_Message;
+extern data_t data;
 
 /**********************************************************************
  * Definition dedicated to the global variable
@@ -377,6 +380,24 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
     return E_OK;
+}
+
+void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc) 
+{
+    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
+    
+    data.type_message = TYPE_ACCEL;
+    data.Xacc.LongNb = Xacc.LongNb;
+    data.Yacc.LongNb = Yacc.LongNb;
+    data.Zacc.LongNb = Zacc.LongNb;
+    data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
+    data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
+    data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
+    data.hour = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
+    data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
+    data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
+    
+    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }
 
 /**********************************************************************
