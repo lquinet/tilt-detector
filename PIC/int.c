@@ -116,7 +116,7 @@ void InterruptVectorL(void)
 	//Accelerometer
 	if (INTCONbits.INT0IF)
     {
-        SetEvent(TASK_Main_ID, ACC_EVENT);
+        SetEvent(TASK_Main_ID, ACCEL_EVENT);
         INTCONbits.INT0IF=0;
     }
 
