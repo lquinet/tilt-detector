@@ -72,9 +72,10 @@
 
 //TASK Main
 #define DELAY_EVENT       	0x02
-#define RTCC_EVENT          0x03
+#define RTCC_EVENT          0x22
 #define M24LR04E_EVENT      0x04
-#define ACC_EVENT       	0x05
+//#define TEST_EVENT       	0x05
+#define ACCEL_EVENT       	0x05
 
 
 //DRV_RS
