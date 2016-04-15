@@ -10,6 +10,7 @@
 #include "../drivers/drv_i2c.h"
 #include "../drivers/drv_rs.h"
 #include "../sensors/M24LR04E_R.h"
+#include "../user.h"
 
 /************************************************************************/
 /* Constants and macros                                                 */
@@ -344,6 +345,7 @@ void fxls8471q_managePortraitLandscape(void)
 {   
     uint8_t rawVal[1];
     uint8_t newlp=0;
+    IntTo8_t nullValue=0;
 
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, 1, &rawVal[0]);
     newlp=(rawVal[0]&(1<<FXLS8471Q_PL_STATUS_newlp_BIT))>>FXLS8471Q_PL_STATUS_newlp_BIT;
@@ -363,7 +365,6 @@ void fxls8471q_managePortraitLandscape(void)
                 #ifdef DEBUG_FXLS8471Q
                 Printf("Back orientation and ");
                 #endif
-                IntTo8_t nullValue=0;
                 FXLS8471QSaveNdefMessage(nullValue, nullValue, nullValue, 0x01);
                 break;
             default:
