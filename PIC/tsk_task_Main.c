@@ -93,9 +93,8 @@ TASK(TASK_Main)
     IntTo8_t subAddress = 0;
     IntTo8_t temperatureIntTo8 = 0;
     IntTo8_t Xacc, Yacc, Zacc;
-    uint8_t Acc_event;
     float temperatureFloat=0;
-    uint8_t counterRTCC=1;
+    uint16_t counterRTCC=1;
     uint8_t StatusPackage=52;
     boolean isRF_WIP_BUSY = 0;
     uint8_t configurationBytes[24];
@@ -193,6 +192,7 @@ TASK(TASK_Main)
     StartRTCC(DateTime);
 
     // DEBUG
+    /*
     Xacc.LongNb = 0xA051;
     Yacc.LongNb = 0xA052;
     Zacc.LongNb = 0xA053;
@@ -200,10 +200,12 @@ TASK(TASK_Main)
     FXLS8471QSaveNdefMessage( Xacc,  Yacc,  Zacc,  Acc_event);
     subAddress.LongNb = 0;
     M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+    */
+    
     
     while (1)
     {
-        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACC_EVENT);
+        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
         
         // RTCC EVENT
@@ -248,6 +250,8 @@ TASK(TASK_Main)
             
             // Check if RF_Change
             if (isRF_WIP_BUSY){
+                // disable isRF_WIP_BUSY
+                isRF_WIP_BUSY = 0;
                 // Enable INT1 interruptions
                 INTCON3bits.INT1IE = 1;
                 // Read user configuration from e²p memory
@@ -289,10 +293,10 @@ TASK(TASK_Main)
             INTCON3bits.INT1IE = 0;
             isRF_WIP_BUSY = 1;
         }
-		 // ACC_EVENT
-        if (TASK_Main_event & ACC_EVENT){
-			ClearEvent(ACC_EVENT);
-	
+		 // ACCEL_EVENT
+        if (TASK_Main_event & ACCEL_EVENT){
+			ClearEvent(ACCEL_EVENT);
+
 			fxls8471q_checkSourceInterrupt();
         }
 
@@ -304,6 +308,14 @@ TASK(TASK_Main)
         WDTCONbits.REGSLP=1; // Regulator Low power
         Sleep();
     }//Fin while WaitEvent
+
+    /*
+    while(1){
+        WaitEvent( ACCEL_EVENT);
+        ClearEvent(ACCEL_EVENT);
+    }
+     */
+
 }
 
 
