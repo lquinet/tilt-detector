@@ -7,7 +7,6 @@
 #include "../tsk_task_Main.h"
 
 extern I2C_message_t My_I2C_Message;
-extern data_t data;
 
 void InitSTTS751()
 {
@@ -26,11 +25,14 @@ void ReadTemperatureSTTS751(IntTo8_t *temperature)
 
 float ConvertTemperatureSTTS751(IntTo8_t temperature)
 {
+    float tempFloat;
+    
     if ((int8_t) temperature.Nb8_B[1] >= 0){
         return (float) ((uint16_t)temperature.Nb8_B[1]<<2 | temperature.Nb8_B[0]>>6)/4;
     }
     else {
-        return (float) ( (int16_t)(temperature.Nb8_B[1]<<8)/64 | (temperature.Nb8_B[0]>>6) )/4;
+        tempFloat = (float) ( (int16_t)(temperature.Nb8_B[1]<<8)/64 | (temperature.Nb8_B[0]>>6) )/4;
+        return tempFloat;
     }
 }
 

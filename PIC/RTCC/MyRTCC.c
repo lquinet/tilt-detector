@@ -39,6 +39,47 @@ void RTCC_configure(unsigned char value[])
     mRtccAlrmEnable(); //enable the rtcc alarm to wake the device up from (deep) sleep
 }
 
+// Convertion of a BCD number in decimal
+uint8_t BcdHexToBcdDec(uint8_t Nb)
+{
+    uint8_t Dec = 0;
+    Dec = (Nb & 0xF0) >> 4;
+    Dec = 10 * Dec;
+    Dec = Dec + (Nb & 0x0F);
+    return Dec;
+}
+
+// Convertion of a decimal number in BCD
+uint8_t convertCharToBCD(uint8_t toConvert)
+{
+	uint8_t dizaine = 0;
+	uint8_t unite = 0;
+  
+    // On récupère l'unité du nombre par un modulo
+    unite = toConvert % 10;
+    // On récupère la dizaine du nombre
+    dizaine = toConvert /10; 
+
+    return ((dizaine << 4) | (unite));
+}
+
+// Convertion of an array of decimal numbers in BCD
+void convertCharArrayToBCD(uint8_t *arrayToConvert, uint8_t length)
+{
+	uint8_t dizaine = 0;
+	uint8_t unite = 0;
+	uint8_t i;
+    
+    for (i=0; i<length; i++){
+        // On récupère l'unité du nombre par un modulo
+        unite = arrayToConvert[i] % 10;
+        // On récupère la dizaine du nombre
+        dizaine = arrayToConvert[i]/10; 
+        
+        arrayToConvert[i] = ((dizaine << 4) | (unite));
+    }
+}
+
 // Functions documentation:
 
 /*********************************************************************

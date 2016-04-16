@@ -10,25 +10,45 @@
 
 #include "../user.h"
 
-/* @LOIC:
- ** @name NdefMessageAddTextRecord
- * 
- * @param text: pointer to the string to store in the e²p
- * @param encoding: pointer to the constant string which contains the encoding of the text area ("en" for example)
- */
-void NdefMessageAddTextRecord(char *text, const rom char *encoding);
+/*********************** PAYLOAD ****************************/
+// Type de message (acceleromètre ou temperature)
+#define TYPE_ACCEL  1
+#define TYPE_TEMP   2
 
-/**********************************************************************
- * Concatenate the data to send by NDEF in the payload, with the terminator at the end
- * Don't use strcat because there are no '\0' at the end of the string (impossible because the data can contain
- * null bytes!)
- * 
- * @param  *text    	 data to store in NDEF record
- * @param  *payload      payload of the NDEF record
- * @param  address    	 The slave address of the M24LR04E
- * @return none
- **********************************************************************/
+// Nombre de bytes de data pour l'envoyer dans NDEF record
+#define NB_MAX_DATA_BYTES   16
+
+// Nombre de bytes dans le payload quand acceleromtètre
+#define NB_DATA_BYTES_ACCEL   15
+
+// Nombre de bytes dans le payload quand capteur de température
+#define NB_DATA_BYTES_TEMP   10
+
+// Index du type de message dans le payload
+#define INDEX_MSG_TYPE  7
+
+// Payload structure to store in an NDEF record
+typedef struct {     
+    uint8_t day;       
+    uint8_t month;    
+    uint8_t year; 
+    uint8_t hour;
+    uint8_t min;
+    uint8_t sec;
+    uint8_t unused;
+    uint8_t type_message;
+    IntTo8_t Xacc;
+    IntTo8_t Yacc;
+    IntTo8_t Zacc;
+    uint8_t Acc_event;
+    IntTo8_t temp;
+} NDEFPayload_t;
+
+void NdefMessageAddTextRecord(char *text, const rom char *encoding);
 void DataCat(uint8_t *payload, char *text, uint8_t length);
+void BuildMessage(char *payload, NDEFPayload_t data);
+void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
+void STTS751SaveNdefMessage(IntTo8_t temp);
 
 #endif	/* NDEFMESSAGE_H */
 

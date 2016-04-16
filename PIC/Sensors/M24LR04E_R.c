@@ -1,13 +1,15 @@
 #include <string.h>
-#include "pro_man.h"
-#include "user.h"
+#include "../Include/pro_man.h"
+#include "../user.h"
 #include "M24LR04E_R.h"
-#include "NDEF/NDEFRecord.h"
+#include "../NDEF/NDEFMessage.h"
+#include "../NDEF/NDEFRecord.h"
 #include "../tsk_task_Main.h"
 #include "../RTCC/MyRTCC.h"
+#include "EMC1001.h"
 
 extern I2C_message_t My_I2C_Message;
-extern data_t data;
+extern NDEFPayload_t data;
 
 /**********************************************************************
  * Definition dedicated to the global variable
@@ -36,11 +38,6 @@ void M24LR04E_Init (void)
     INTCON3bits.INT1IP = 0; //Low Priority
     
     //INTCONbits.INT0IE = 1;
-}
-
-void M24LR04E_CompareIfDataLoggerChange (void)
-{
-    
 }
 
 
@@ -139,6 +136,43 @@ uint8_t M24LR04E_ReadOneByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t su
     return pData[0];
 }
 
+/**********************************************************************
+ * This function read the configuration bytes in M24LR04E memory and store data in _ConfigBytes_t struct
+ * Convert the temperature in float and the dateTime in BCD.
+ *
+ * @param   configBytesStruct   Pointer to the _ConfigBytes_t struct to store the configuration bytes
+ * @return  void
+ **********************************************************************/
+void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct)
+{
+    IntTo8_t subAddress, temperatureIntTo8;
+    uint8_t configurationBytes[24];
+    uint8_t errorState;
+    
+    subAddress.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
+    errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 24, configurationBytes);
+    if (errorState == E_OK){
+        // Status Package
+        configBytesStruct->statusPackage = configurationBytes[0];
+        
+        // DateTime
+        memcpy(configBytesStruct->DateTime, configurationBytes+4, 6);
+        convertCharArrayToBCD(configBytesStruct->DateTime, 6);
+        
+        // Accelerations limits
+        configBytesStruct->XaccMax.Nb8_B[1] = configurationBytes[12];
+        configBytesStruct->XaccMax.Nb8_B[0] = configurationBytes[13];
+        configBytesStruct->YaccMax.Nb8_B[1] = configurationBytes[14];
+        configBytesStruct->YaccMax.Nb8_B[0] = configurationBytes[15];
+        configBytesStruct->ZaccMax.Nb8_B[1] = configurationBytes[16];
+        configBytesStruct->ZaccMax.Nb8_B[0] = configurationBytes[17];
+        
+        // Temperature limits
+        temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
+        temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
+        configBytesStruct->tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
+    }
+} 
 
 /**********************************************************************
  *
@@ -239,23 +273,26 @@ StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t
 }
 
 /**********************************************************************
- * Update the M24LR04E with the Time structure passed to the function.
+ * Save a new NDEF message that contain the datetime and temperature or acceleration.
+ * The NDEFMessage is contained in the _NdefRecord_t structure,and we'll cross the memory 
+ * of this structure to send the frame to the e²p.
  * 
- * @param  *text    	 Text to store in NDEF message
- * @param  *encoding     The string of the encoding language         
- * @param  MemMsg    	 IN  Mandatory I2C structure
- * @param  address    	 The slave address of the M24LR04E
- * @return Status         E_OK if the EELC256 has been updated
- *                        E_OS_STATE if the I2C access failed
+ * @param  data         data to store in NDEF message
+ * @param  *encoding    The string of the encoding language         
+ * @param  MemMsg    	IN  Mandatory I2C structure
+ * @param  address    	The slave address of the M24LR04E
+ * @return Status       E_OK if the EELC256 has been updated
+ *                      E_OS_STATE if the I2C access failed
  **********************************************************************/
-StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
+
+StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
 
 {
     static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
     char text[NB_MAX_DATA_BYTES];
     
-    // Building of a string from the structure data_t
+    // Building of a string from the structure NDEFPayload_t
     BuildMessage(text, data);
     
     // Creation of the NDEF message in NdefRecord structure
@@ -325,46 +362,11 @@ StatusType M24LR04E_SaveNdefMessage(data_t data, const rom char *encoding, I2C_m
         MemMsg->addr_low += 4;
         MemMsg->ram_data+= 4;
     }
+    
     lastSubAddressWrited.LongNb += NbByteToSend - 1;
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
     return E_OK;
-}
-
-void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event) 
-{
-    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
-    
-    data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
-    data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
-    data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
-    data.hour = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
-    data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
-    data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
-    data.type_message = TYPE_ACCEL;
-    data.Xacc.LongNb = Xacc.LongNb;
-    data.Yacc.LongNb = Yacc.LongNb;
-    data.Zacc.LongNb = Zacc.LongNb;
-    data.Acc_event = Acc_event;
-    
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
-}
-
-void STTS751SaveNdefMessage(IntTo8_t temp) 
-{
-    RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
-    
-    data.type_message = TYPE_TEMP;
-    data.temp.Nb8_B[1] = temp.Nb8_B[1];
-    data.temp.Nb8_B[0] = temp.Nb8_B[0];
-    data.day = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mday);
-    data.month = BcdHexToBcdDec(Rtcc_read_TimeDate.f.mon);
-    data.year = BcdHexToBcdDec(Rtcc_read_TimeDate.f.year);
-    data.hour = BcdHexToBcdDec(Rtcc_read_TimeDate.f.hour);
-    data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
-    data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
-    
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }
 
 /**********************************************************************
@@ -418,6 +420,9 @@ StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
 /**********************************************************************
  * Wait that the M24LR04E end its internal memory writing at 
  * the end of a page write
+ * 
+ * @param   address    	 The slave address of the M24LR04E
+ * @return  Status       None
  **********************************************************************/
 
 void WaitEepResponse ( uint8_t address){
@@ -452,39 +457,6 @@ void WaitEepResponse ( uint8_t address){
     
     // enable the i2c interrupt enable bit (SSP1IE)
     PIE1  |= 0b00001000;
-}
-
-void BuildMessage(char *text, data_t data){
-    
-    if (data.type_message == TYPE_ACCEL){
-        text[0] = data.day;
-        text[1] = data.month;
-        text[2] = data.year;
-        text[3] = data.hour;
-        text[4] = data.min;
-        text[5] = data.sec;
-        text[6] = 0xFF;
-        text[7] = data.type_message;
-        text[8] = data.Xacc.Nb8_B[1];
-        text[9] = data.Xacc.Nb8_B[0];
-        text[10] = data.Yacc.Nb8_B[1];
-        text[11] = data.Yacc.Nb8_B[0];
-        text[12] = data.Zacc.Nb8_B[1];
-        text[13] = data.Zacc.Nb8_B[0];
-        text[14] = data.Acc_event;
-    }
-    else if (data.type_message == TYPE_TEMP){
-        text[0] = data.day;
-        text[1] = data.month;
-        text[2] = data.year;
-        text[3] = data.hour;
-        text[4] = data.min;
-        text[5] = data.sec;
-        text[6] = 0xFF;
-        text[7] = data.type_message;
-        text[8] = data.temp.Nb8_B[1];
-        text[9] = data.temp.Nb8_B[0];  
-    }
 }
 
 void writeDateTimeToConfigurationByte (void){
