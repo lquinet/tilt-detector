@@ -56,14 +56,8 @@
 #include "sensors/FXLS8471Q_registers.h"
 
 /**********************************************************************
- * Definition dedicated to the local function
- **********************************************************************/
-void Delay_ms(unsigned int delay);
-
-/**********************************************************************
  * Definition dedicated to the Global variables
  **********************************************************************/
-char value[80]="";
 I2C_message_t My_I2C_Message;
 EventMaskType TASK_Main_event; // Utilisé pour récupérer Evènement en cours
 
@@ -74,12 +68,16 @@ uint8_t DateTime[6]="\0";
 float tempMax=0;
 
 // Maximum acceleration
-IntTo8_t accXMax=0;
-IntTo8_t accYMax=0;
-IntTo8_t accZMax=0;
+IntTo8_t XaccMax=0;
+IntTo8_t YaccMax=0;
+IntTo8_t ZaccMax=0;
 
 // Structure to send NDEF message
-data_t data;
+NDEFPayload_t data;
+
+#ifdef DEBUG_M24LR04E_R
+char value[80]="";
+#endif
 
 /**********************************************************************
  ------------------------------- TASK_Main ----------------------------
@@ -87,23 +85,20 @@ data_t data;
 
 TASK(TASK_Main)
 {
-
-    char str[30] = "";
-    IntTo8_t address = 0;
+    _ConfigBytes_t configBytes;
     IntTo8_t subAddress = 0;
-    IntTo8_t temperatureIntTo8 = 0;
-    IntTo8_t Xacc, Yacc, Zacc;
+    IntTo8_t temperatureIntTo8;
     float temperatureFloat=0;
     uint16_t counterRTCC=1;
-    uint8_t StatusPackage=52;
+    uint8_t statusPackage;
     boolean isRF_WIP_BUSY = 0;
-    uint8_t configurationBytes[24];
-    uint8_t errorState;
+    boolean isTempExceeded = 0;
     
+    #ifdef DEBUG_M24LR04E_R
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
-    StatusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
+    statusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 13);
@@ -129,15 +124,43 @@ TASK(TASK_Main)
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_TEMP_LIMITS+1;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0b00000000);
     
-    // INIT
-    subAddress.LongNb=M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
-    StatusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
+    subAddress.LongNb = 0;
+    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+    
+    #endif
+
+    // Init peripherals
     InitSTTS751();
     M24LR04E_Init();
 	fxls8471q_init();
     
+    // Read user configuration from e²p memory
+    M24LR04E_ReadConfigurationBytes(&configBytes);
+    
+    // Copy Status Package
+    statusPackage = configBytes.statusPackage;
+    
+    // Copy accelerations limits
+    XaccMax.LongNb = configBytes.XaccMax.LongNb;
+    YaccMax.LongNb = configBytes.YaccMax.LongNb;
+    ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
+
+    // Copy Temperature limits
+    tempMax = configBytes.tempMax;
+    
+    // Start RTCC
+    StartRTCC(configBytes.DateTime);
+
+    // DEBUG
+    /*
+    Xacc.LongNb = 0xA051;
+    Yacc.LongNb = 0xA052;
+    Zacc.LongNb = 0xA053;
+    Acc_event = 0x01;
+    FXLS8471QSaveNdefMessage( Xacc,  Yacc,  Zacc,  Acc_event);
     subAddress.LongNb = 0;
     M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+    */
     
     /*
     //strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
@@ -164,43 +187,7 @@ TASK(TASK_Main)
     convertchartoBCD(DateTime, 6);
     */
     
-    // Read user configuration from e²p memory
-    subAddress.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
-    errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 24, configurationBytes);
-    if (errorState == E_OK){
-        // Status Package
-        StatusPackage = configurationBytes[0];
-        
-        // DateTime
-        memcpy(DateTime, configurationBytes+4, 6);
-        convertCharArrayToBCD(DateTime, 6);
-        
-        // Accelerations limits
-        accXMax.Nb8_B[1] = configurationBytes[12];
-        accXMax.Nb8_B[0] = configurationBytes[13];
-        accYMax.Nb8_B[1] = configurationBytes[14];
-        accYMax.Nb8_B[0] = configurationBytes[15];
-        accZMax.Nb8_B[1] = configurationBytes[16];
-        accZMax.Nb8_B[0] = configurationBytes[17];
-        
-        // Temperature limits
-        temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
-        temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
-        tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
-    }
-    
-    StartRTCC(DateTime);
-
-    // DEBUG
-    /*
-    Xacc.LongNb = 0xA051;
-    Yacc.LongNb = 0xA052;
-    Zacc.LongNb = 0xA053;
-    Acc_event = 0x01;
-    FXLS8471QSaveNdefMessage( Xacc,  Yacc,  Zacc,  Acc_event);
-    subAddress.LongNb = 0;
-    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-    */
+    // END DEBUG
     
     
     while (1)
@@ -214,14 +201,14 @@ TASK(TASK_Main)
             ClearEvent(RTCC_EVENT );
             // Toggle LED (toutes les 2 sec)
             if (counterRTCC%2 == 0) {
-                if (StatusPackage == ColisDown)
+                if (statusPackage == ColisDown)
                 {
                     LedGreen = 0;
                     LedRed = 1;
                     Delay_ms(100);
                     LedRed = 0;
                 } else
-                    if (StatusPackage == ColisUP)
+                    if (statusPackage == ColisUP)
                 {
                     LedRed = 0;
                     LedGreen = 1;
@@ -235,11 +222,27 @@ TASK(TASK_Main)
                 // ROUTINE TEMPERATURE
                 ReadTemperatureSTTS751(&temperatureIntTo8);
                 temperatureFloat = ConvertTemperatureSTTS751(temperatureIntTo8);
-                if (temperatureFloat > tempMax){
-                    STTS751SaveNdefMessage(temperatureIntTo8);
-                    //subAddress.LongNb = 0;
-                    //M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+                if (isTempExceeded == 0){
+                    if (temperatureFloat > tempMax){
+                        isTempExceeded = 1;
+                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        #ifdef DEBUG_M24LR04E_R
+                        subAddress.LongNb = 0;
+                        M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+                        #endif
+                    }
                 }
+                else {
+                    if (temperatureFloat < tempMax){
+                        isTempExceeded = 0;
+                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        #ifdef DEBUG_M24LR04E_R
+                        subAddress.LongNb = 0;
+                        M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
+                        #endif
+                    }
+                }
+                
             } 
             
             // Write DateTime to e²p every 10 min
@@ -254,31 +257,33 @@ TASK(TASK_Main)
                 isRF_WIP_BUSY = 0;
                 // Enable INT1 interruptions
                 INTCON3bits.INT1IE = 1;
+                
                 // Read user configuration from e²p memory
-                address.LongNb = M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER + 1;
-                errorState = M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, address, 24, configurationBytes);
-                if (errorState == E_OK){
-                    // Check if RF change (change config or reset)
-                    if (configurationBytes[1] == RF_Change_WithoutReset || configurationBytes[1] == RF_Change_Reset){
-                        // Status Package
-                        if (configurationBytes[1] == RF_Change_Reset){
-                            // RESET
-                            Reset();
-                        }
-                        if (configurationBytes[1] == RF_Change_WithoutReset){
-                            // Accelerations limits
-                            accXMax.Nb8_B[1] = configurationBytes[12];
-                            accXMax.Nb8_B[0] = configurationBytes[13];
-                            accYMax.Nb8_B[1] = configurationBytes[14];
-                            accYMax.Nb8_B[0] = configurationBytes[15];
-                            accZMax.Nb8_B[1] = configurationBytes[16];
-                            accZMax.Nb8_B[0] = configurationBytes[17];
+                M24LR04E_ReadConfigurationBytes(&configBytes);
+                
+                // Check if RF change (change config or reset)
+                if (configBytes.RF_Change == RF_Change_WithoutReset || configBytes.RF_Change == RF_Change_Reset){
+                    // Status Package
+                    if (configBytes.RF_Change == RF_Change_Reset){
+                        // clear RF_CHANGE byte in e²p
+                        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+                        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
 
-                            // Temperature limits
-                            temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
-                            temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
-                            tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
-                        }
+                        // RESET
+                        Reset();
+                    }
+                    if (configBytes.RF_Change == RF_Change_WithoutReset){
+                        // clear RF_CHANGE byte in e²p
+                        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+                        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
+
+                        // Copy accelerations limits
+                        XaccMax.LongNb = configBytes.XaccMax.LongNb;
+                        YaccMax.LongNb = configBytes.YaccMax.LongNb;
+                        ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
+
+                        // Copy Temperature limits
+                        tempMax = configBytes.tempMax;
                     }
                 }
             }
@@ -296,68 +301,15 @@ TASK(TASK_Main)
 		 // ACCEL_EVENT
         if (TASK_Main_event & ACCEL_EVENT){
 			ClearEvent(ACCEL_EVENT);
-
 			fxls8471q_checkSourceInterrupt();
         }
 
-        // Disable timer0
-        //T0CONbits.TMR0ON = 0;
         //Configure Sleep Mode
-        //SLEEP
         OSCCONbits.IDLEN = 0; // Not in Idle
         WDTCONbits.REGSLP=1; // Regulator Low power
         Sleep();
     }//Fin while WaitEvent
 
-    /*
-    while(1){
-        WaitEvent( ACCEL_EVENT);
-        ClearEvent(ACCEL_EVENT);
-    }
-     */
-
-}
-
-
-// Convertion of a BCD number in decimal
-uint8_t BcdHexToBcdDec(uint8_t Nb)
-{
-    uint8_t Dec = 0;
-    Dec = (Nb & 0xF0) >> 4;
-    Dec = 10 * Dec;
-    Dec = Dec + (Nb & 0x0F);
-    return Dec;
-}
-
-// Convertion of a decimal number in BCD
-uint8_t convertCharToBCD(uint8_t toConvert)
-{
-	uint8_t dizaine = 0;
-	uint8_t unite = 0;
-  
-    // On récupère l'unité du nombre par un modulo
-    unite = toConvert % 10;
-    // On récupère la dizaine du nombre
-    dizaine = toConvert /10; 
-
-    return ((dizaine << 4) | (unite));
-}
-
-// Convertion of an array of decimal numbers in BCD
-void convertCharArrayToBCD(uint8_t *arrayToConvert, uint8_t length)
-{
-	uint8_t dizaine = 0;
-	uint8_t unite = 0;
-	uint8_t i;
-    
-    for (i=0; i<length; i++){
-        // On récupère l'unité du nombre par un modulo
-        unite = arrayToConvert[i] % 10;
-        // On récupère la dizaine du nombre
-        dizaine = arrayToConvert[i]/10; 
-        
-        arrayToConvert[i] = ((dizaine << 4) | (unite));
-    }
 }
 
 /**********************************************************************
