@@ -10,6 +10,7 @@
 
 extern I2C_message_t My_I2C_Message;
 extern NDEFPayload_t data;
+extern _NdefRecord_t NdefRecord;
 
 /**********************************************************************
  * Definition dedicated to the global variable
@@ -228,7 +229,6 @@ StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t s
  **********************************************************************/
 StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t *data, uint8_t NbByteToSend)
 {
-    unsigned char pData;
     uint8_t i = 0, NbByteSended = 0;
     
     MemMsg->control = address & 0xFE;
@@ -236,22 +236,41 @@ StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t
     MemMsg->addr_high = subAddress.Nb8_B[1];
     // First register Adress
     MemMsg->addr_low = subAddress.Nb8_B[0];
-    // The bit setting of flags.ptr_type
+    // Cross the _NdefRecord_t structure to send the frame
     MemMsg->ram_data = data;
-    // Must be less than 255
-    MemMsg->num_bytes = NbByteToSend;
+    // 1 page = 4 bytes! -> subaddress must be a multiple of 4 to write 4 bytes one shot!
+    MemMsg->num_bytes = 4 - (subAddress.LongNb % 4);
     // 0 = single byte address, 1= two byte address
     MemMsg->flags.long_addr = 1;
     // 1 = read from external, 0 = write to external
     MemMsg->flags.i2c_read = 0;
     // 1 = SMBbus Enabled, 0 = Disabled
     MemMsg->flags.SMBus = 0;
+    // Attention important de reseter le flag d'erreur!!!
     MemMsg->flags.error = 0; 
-
     
-    for (i = 0; i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
+    // Wait previous internal writing of the e²p
+    WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    
+    // First page write
+    I2C_enqMsg(MemMsg);
+    SetEvent(I2C_DRV_ID, I2C_NEW_MSG);
+    WaitEvent(I2C_QUEUE_EMPTY);
+    ClearEvent(I2C_QUEUE_EMPTY);
+    
+    NbByteSended += MemMsg->num_bytes;
+    subAddress.LongNb += MemMsg->num_bytes;
+    MemMsg->addr_high = subAddress.Nb8_B[1];
+    MemMsg->addr_low = subAddress.Nb8_B[0];
+    MemMsg->ram_data+= MemMsg->num_bytes;
+    
+    if ((NbByteToSend - NbByteSended) < 4)
+        MemMsg->num_bytes = (NbByteToSend - NbByteSended);
+    else MemMsg->num_bytes = 4;
+    
+    for (i = 4 - (subAddress.LongNb % 4); i < NbByteToSend; i += 4)//on ne peut écrire que par paquet de 4 bytes
     {
-        // Wait previous internal writing of the e²p
+        // Wait internal writing of the e²p
         WaitEepResponse(M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
         
         // Send the message to the I2C buffer
@@ -263,7 +282,9 @@ StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t
         NbByteSended += 4;
         if ((NbByteToSend - NbByteSended) < 4)
             MemMsg->num_bytes = (NbByteToSend - NbByteSended);
-        MemMsg->addr_low += 4;
+        subAddress.LongNb += 4;
+        MemMsg->addr_high = subAddress.Nb8_B[1];
+        MemMsg->addr_low = subAddress.Nb8_B[0];
         MemMsg->ram_data+= 4;
     }
     
@@ -296,10 +317,10 @@ StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding
     BuildMessage(text, data);
     
     // Creation of the NDEF message in NdefRecord structure
-    NdefMessageAddTextRecord(text, encoding);
+    //NdefMessageAddTextRecord(text, encoding);
     
     // Nb Bytes To Send = the value of the TLV Length byte + the TLV Length byte +  the TLV Length byte + TLV Tag byte + Terminator TLV
-    NbByteToSend = NdefRecord._TLV_Length + 3;
+    //NbByteToSend = NdefRecord._TLV_Length + 3;
     
     // Test if user e²prom memory is full
     if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
@@ -367,6 +388,104 @@ StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
     return E_OK;
+}
+
+/**********************************************************************
+ * Save a new NDEF message that contain the datetime and temperature or acceleration.
+ * The NDEFMessage is contained in the _NdefRecord_t structure,and we'll cross the memory 
+ * of this structure to send the frame to the e²p.
+ * 
+ * @param  data         data to store in NDEF message
+ * @param  *encoding    The string of the encoding language         
+ * @param  MemMsg    	IN  Mandatory I2C structure
+ * @param  address    	The slave address of the M24LR04E
+ * @return Status       E_OK if the EELC256 has been updated
+ *                      E_OS_STATE if the I2C access failed
+ **********************************************************************/
+
+StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
+
+{
+    static IntTo8_t lastSubAddressWrited = 0x08; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
+    static sizeOfLastRecord = 0;
+    static IntTo8_t TLV_Length=0; // 3 Bytes format!
+    static boolean LastRecordIsTheFirst;
+    uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
+    char text[NB_MAX_DATA_BYTES];
+    IntTo8_t subAddress;
+    
+    // Test if user e²prom memory is full
+    if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
+    {
+        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
+        
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, MemoryFull);
+        isMemoryFull = MemoryFull;
+        return E_OS_STATE;
+    }
+    
+    // Building of a string from the structure NDEFPayload_t
+    BuildMessage(text, data);
+    
+    if (lastSubAddressWrited.LongNb == 0x08) {
+        // Creation of the NDEF message in NdefRecord structure
+        // The record header is different if this is the first record or not
+        NdefMessageAddTextRecord(text, encoding, 1); 
+        
+        M24LR04E_SetTLV_Block (MemMsg, address, 1);
+        
+        LastRecordIsTheFirst = 1;
+    }
+    else {
+        NdefMessageAddTextRecord(text, encoding, 0);
+        
+        // Modify the record header of the last record
+        if (LastRecordIsTheFirst){
+            // plusieurs records (MB=1, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+            subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+            M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x91);
+            
+            LastRecordIsTheFirst = 0;
+        }
+        else {
+            // plusieurs records (MB=0, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+            subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+            M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x11);
+        }
+        
+        M24LR04E_SetTLV_Block (MemMsg, address, 0);
+    }
+
+    // Nb Bytes To Send = record Length + Terminator TLV
+    NbByteToSend = NdefRecord._recordLength + 1;
+    M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
+    
+    // Retain the last adress writed
+    lastSubAddressWrited.LongNb += NbByteToSend - 1;
+    // Retain the size of the last record
+    sizeOfLastRecord = NdefRecord._recordLength;
+}
+
+void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFirstRecord){
+    static IntTo8_t TLV_Length=0; // 3 Bytes format!
+    uint8_t TLV_Block[3];
+    IntTo8_t subAddress;
+    
+    // Écriture TLV Tag si premier NDEF record
+    if (isFirstRecord){
+        subAddress.LongNb = 0x04;
+        M24LR04E_WriteByte(MemMsg, address, subAddress, TLV_TAG);
+    }
+    // Writing of the TLV Length
+    // TLV_Length = the record Length
+    TLV_Length.LongNb += NdefRecord._recordLength;
+    
+    TLV_Block[0] = 0xFF; // 3 bytes format
+    TLV_Block[1] = TLV_Length.Nb8_B[1]; // byte high
+    TLV_Block[2] = TLV_Length.Nb8_B[0]; // Byte low
+
+    subAddress.LongNb = 0x05;
+    M24LR04E_WriteNBytes(MemMsg, address, subAddress, TLV_Block, 3);
 }
 
 /**********************************************************************
