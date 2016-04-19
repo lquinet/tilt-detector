@@ -3,9 +3,11 @@
 #include "../Sensors/M24LR04E_R.h"
 #include "../RTCC/MyRTCC.h"
 #include <string.h>
+#include "../user.h"
 
 extern I2C_message_t My_I2C_Message;
 extern NDEFPayload_t data;
+extern _NdefRecord_t NdefRecord;
 
 /*******************************************************************************
  * Build the NDEF message.
@@ -21,7 +23,7 @@ extern NDEFPayload_t data;
  * 
  *******************************************************************************/
 
-void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding)
+void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding, boolean isFirstRecord)
 {
     // Length of the payloadArray
     uint8_t length; 
@@ -30,7 +32,7 @@ void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding)
     memset(NdefRecord._payload,0,sizeof(NdefRecord._payload));
     
     // initialisation de tous les champs fixes
-    NdefRecordConstructor();
+    NdefRecordConstructor(isFirstRecord);
     
     // Met le nombre de place que prends le payload
     // On doit ajouter le nb de caractères de l'encodage + 1 car il faut aussi mettre le status byte
@@ -38,8 +40,8 @@ void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding)
     else length = NB_DATA_BYTES_ACCEL;
     NdefRecordSetPayloadLengh(length + strlenpgm(encoding) +1);
     
-    // TLV length = payload length + 4 car on doit ajouter le cabability container CC1, CC2, CC3, CC4
-    NdefRecordSetTLV_Length(NdefRecord._payloadLength+4);
+    // Record length = payload length + 4 car on doit ajouter le header, le type length (=1), le type et le status byte
+    NdefRecordSetRecordLength(NdefRecord._payloadLength+4);
     
     // Satus byte = encoding length car UTF-8
     NdefRecordSetStatusByte(strlenpgm(encoding));
@@ -175,5 +177,5 @@ void STTS751SaveNdefMessage(IntTo8_t temp)
     data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
     data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
     
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    M24LR04E_SaveNdefRecord(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }

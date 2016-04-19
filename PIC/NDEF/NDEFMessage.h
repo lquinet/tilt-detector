@@ -10,6 +10,9 @@
 
 #include "../user.h"
 
+/*********************** TLV BLOCK **************************/
+#define TLV_TAG 0x03
+
 /*********************** PAYLOAD ****************************/
 // Type de message (acceleromètre ou temperature)
 #define TYPE_ACCEL  1
@@ -44,7 +47,7 @@ typedef struct {
     IntTo8_t temp;
 } NDEFPayload_t;
 
-void NdefMessageAddTextRecord(char *text, const rom char *encoding);
+void NdefMessageAddTextRecord(char *text, const rom char *encoding, boolean isFirstRecord);
 void DataCat(uint8_t *payload, char *text, uint8_t length);
 void BuildMessage(char *payload, NDEFPayload_t data);
 void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
