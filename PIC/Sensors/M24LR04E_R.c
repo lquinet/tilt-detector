@@ -11,6 +11,7 @@
 extern I2C_message_t My_I2C_Message;
 extern NDEFPayload_t data;
 extern _NdefRecord_t NdefRecord;
+extern uint8_t statusPackage; // Status of the package (UP or DOWN)
 
 /**********************************************************************
  * Definition dedicated to the global variable
@@ -26,8 +27,8 @@ void M24LR04E_Init (void)
     M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
     
     // Set the first TLV block to terminator (0xFE) to erase the user memory
-    subAddress.LongNb = 4;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 4);
+    subAddress.LongNb = 0x04;
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0xFE);
     
     // RF_WIP_BUSY in input
     TRISRF_WIP_BUSY = 1;
@@ -407,9 +408,8 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding,
 
 {
     static IntTo8_t lastSubAddressWrited = 0x08; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
-    static sizeOfLastRecord = 0;
+    static uint8_t sizeOfLastRecord = 0;
     static IntTo8_t TLV_Length=0; // 3 Bytes format!
-    static boolean LastRecordIsTheFirst;
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
     char text[NB_MAX_DATA_BYTES];
     IntTo8_t subAddress;
@@ -433,26 +433,14 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding,
         NdefMessageAddTextRecord(text, encoding, 1); 
         
         M24LR04E_SetTLV_Block (MemMsg, address, 1);
-        
-        LastRecordIsTheFirst = 1;
     }
     else {
         NdefMessageAddTextRecord(text, encoding, 0);
         
-        // Modify the record header of the last record
-        if (LastRecordIsTheFirst){
-            // plusieurs records (MB=1, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
-            subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
-            M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x91);
-            
-            LastRecordIsTheFirst = 0;
-        }
-        else {
-            // plusieurs records (MB=0, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
-            subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
-            M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x11);
-        }
+        // Update the header of the last record writed
+        M24LR04E_UpdateHeader (MemMsg, address, lastSubAddressWrited, sizeOfLastRecord);
         
+        // Update the TLV length
         M24LR04E_SetTLV_Block (MemMsg, address, 0);
     }
 
@@ -464,6 +452,24 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding,
     lastSubAddressWrited.LongNb += NbByteToSend - 1;
     // Retain the size of the last record
     sizeOfLastRecord = NdefRecord._recordLength;
+}
+
+void M24LR04E_UpdateHeader (I2C_message_t *MemMsg, uint8_t address, IntTo8_t lastSubAddressWrited, uint8_t sizeOfLastRecord){
+    IntTo8_t subAddress;
+    static boolean LastRecordIsTheFirst=1;
+    
+    if (LastRecordIsTheFirst){
+        // plusieurs records (MB=1, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+        subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x91);
+        
+        LastRecordIsTheFirst = 0;
+    }
+    else {
+        // plusieurs records (MB=0, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+        subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x11);
+    }
 }
 
 void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFirstRecord){
@@ -591,4 +597,12 @@ void writeDateTimeToConfigurationByte (void){
     dateTimeToWrite[5] = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
     
     M24LR04E_WriteNBytes(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, dateTimeToWrite, 6);
+}
+
+void SetStatusPackageDown (I2C_message_t *MemMsg, uint8_t address){
+    IntTo8_t subAddress;
+    statusPackage = ColisDown;
+    
+    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
+    M24LR04E_WriteByte(MemMsg, address, subAddress, ColisDown);
 }
