@@ -55,28 +55,27 @@ typedef struct Struct_NdefRecord {
     //  uint8_t _CC_C1;         
     //  uint8_t _CC_C2;         
     //  uint8_t _CC_C3;         
-    uint8_t _TLV_Tag;       
-    uint8_t _TLV_Length;    
+    //  uint8_t _TLV_Tag;       
+    //  uint8_t _TLV_Length;    
     uint8_t _RecordHeader; 
     uint8_t _typeLength;
     uint8_t _payloadLength;
-    uint8_t _type[1];
+    uint8_t _type[1];    // for application/octet-stream
     uint8_t _StatusByte;    
     uint8_t _payload[200];
+    uint8_t _recordLength; // for calculations
     uint8_t _Teminator; 
 
 } _NdefRecord_t, *_NdefRecord_tRef;
 
-// variable utilisée dans les fonctions de NDEFMessage.c
-extern _NdefRecord_t NdefRecord;
-
-void NdefRecordConstructor(void);
+void NdefRecordConstructor(boolean isFirstRecord);
 void NdefRecordSetTnf(uint8_t tnf);
 void NdefRecordSetType(uint8_t type, uint8_t numBytes);
 void NdefRecordSetPayloadAccValue(float AccX, float AccY, float AccZ);
 void NdefRecordSetPayloadLengh(uint8_t numBytes);
 void NdefRecordSetTLV_Length(uint8_t numBytes);
 void NdefRecordSetStatusByte(uint8_t numBytes);
+void NdefRecordSetRecordLength(uint8_t numBytes);
 
 #endif	/* NDEFRECORD_H */
 
