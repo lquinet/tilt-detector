@@ -66,6 +66,7 @@ void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct);
 StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address);
 void WaitEepResponse (uint8_t address);
 void writeDateTimeToConfigurationByte (void);
+void SetStatusPackageDown (I2C_message_t *MemMsg, uint8_t address);
 
 #endif	/* M24LR04E_R_H */
 
