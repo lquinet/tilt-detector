@@ -12,6 +12,8 @@
 #include "../sensors/M24LR04E_R.h"
 #include "../user.h"
 
+extern I2C_message_t My_I2C_Message;
+
 /************************************************************************/
 /* Constants and macros                                                 */
 /************************************************************************/
@@ -296,6 +298,7 @@ void fxls8471q_manageMotion(void){
     }
     
     FXLS8471QSaveNdefMessage(ndefAcc[0], ndefAcc[1], ndefAcc[2], eventNumber);
+    SetStatusPackageDown (&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
     
 }
 
@@ -383,6 +386,7 @@ void fxls8471q_managePortraitLandscape(void)
                 Printf("Back orientation and ");
                 #endif
                 FXLS8471QSaveNdefMessage(nullValue, nullValue, nullValue, 0x01);
+                SetStatusPackageDown (&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
                 break;
             default:
                 #ifdef DEBUG_FXLS8471Q
