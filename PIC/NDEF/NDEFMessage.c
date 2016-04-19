@@ -152,7 +152,7 @@ void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8
     data.Zacc.LongNb = Zacc.LongNb;
     data.Acc_event = Acc_event;
     
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    M24LR04E_SaveNdefRecord(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }
 
 /**********************************************************************
