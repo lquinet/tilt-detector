@@ -75,6 +75,9 @@ IntTo8_t ZaccMax=0;
 // Structure to send NDEF message
 NDEFPayload_t data;
 
+// Status of the package (UP or DOWN)
+uint8_t statusPackage;
+
 #ifdef DEBUG_M24LR04E_R
 char value[80]="";
 #endif
@@ -90,7 +93,6 @@ TASK(TASK_Main)
     IntTo8_t temperatureIntTo8;
     float temperatureFloat=0;
     uint16_t counterRTCC=1;
-    uint8_t statusPackage;
     boolean isRF_WIP_BUSY = 0;
     boolean isTempExceeded = 0;
     
