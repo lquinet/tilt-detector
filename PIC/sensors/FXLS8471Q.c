@@ -234,8 +234,12 @@ void fxls8471q_setPULSE_CFG(uint8_t tap){
  */
 void fxls8471q_manageMotion(void){
     uint8_t rawVal[1];
+    int16_t fxls8471q[3];
+    IntTo8_t ndefAcc[3];
+    uint8_t eventNumber=0x00;
     uint8_t ea=0, zhe=0, zhp=0, yhe=0, yhp=0, xhe=0, xhp=0;
 
+    // Determine the axis of the event and the way
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_SRC, 1, &rawVal[0]);
     ea=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_ea_BIT))>>FXLS8471Q_FFMT_SRC_ea_BIT;
     zhe=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_zhe_BIT))>>FXLS8471Q_FFMT_SRC_zhe_BIT;
@@ -245,15 +249,23 @@ void fxls8471q_manageMotion(void){
     xhe=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_xhe_BIT))>>FXLS8471Q_FFMT_SRC_xhe_BIT;
     xhp=(rawVal[0]&(1<<FXLS8471Q_FFMT_SRC_xhp_BIT))>>FXLS8471Q_FFMT_SRC_xhp_BIT;
     
+    // Get value of the acceleration
+    fxls8471q_getAcceleration(&fxls8471q[0], &fxls8471q[1], &fxls8471q[2]);
+    ndefAcc[0].LongNb=fxls8471q[0];
+    ndefAcc[1].LongNb=fxls8471q[1];
+    ndefAcc[2].LongNb=fxls8471q[2];
+    
     if(xhe==1){
         if(xhp==0){
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to +x\r\n");
             #endif
+            eventNumber=0x02;
         }else{
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to -x\r\n");
             #endif
+            eventNumber=0x03;
         }
     }
     if(yhe==1){
@@ -261,10 +273,12 @@ void fxls8471q_manageMotion(void){
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to +y\r\n");
             #endif
+            eventNumber=0x04;
         }else{
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to -y\r\n");
             #endif
+            eventNumber=0x05;
         }
     }
     if(xhe==1){
@@ -272,12 +286,16 @@ void fxls8471q_manageMotion(void){
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to +z\r\n");
             #endif
+            eventNumber=0x06;
         }else{
             #ifdef DEBUG_FXLS8471Q
             Printf("Motion to -z\r\n");
             #endif
+            eventNumber=0x07;
         }
     }
+    
+    FXLS8471QSaveNdefMessage(ndefAcc[0], ndefAcc[1], ndefAcc[2], eventNumber);
     
 }
 
@@ -346,7 +364,6 @@ void fxls8471q_managePortraitLandscape(void)
     uint8_t rawVal[1];
     uint8_t newlp=0;
     IntTo8_t nullValue=0;
-
     I2C_readRegister(FXLS8471Q_ADDRESS, FXLS8471Q_PL_STATUS, 1, &rawVal[0]);
     newlp=(rawVal[0]&(1<<FXLS8471Q_PL_STATUS_newlp_BIT))>>FXLS8471Q_PL_STATUS_newlp_BIT;
     
