@@ -47,9 +47,9 @@ typedef struct {
     IntTo8_t temp;
 } NDEFPayload_t;
 
-void NdefMessageAddTextRecord(char *text, const rom char *encoding, boolean isFirstRecord);
+void NdefMessageAddRecord(uint8_t *payloadArray, boolean isFirstRecord);
 void DataCat(uint8_t *payload, char *text, uint8_t length);
-void BuildMessage(char *payload, NDEFPayload_t data);
+void BuildMessage(uint8_t *payloadArray, NDEFPayload_t data);
 void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
 void STTS751SaveNdefMessage(IntTo8_t temp);
 

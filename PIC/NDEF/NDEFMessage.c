@@ -17,13 +17,13 @@ extern _NdefRecord_t NdefRecord;
  * @name NdefMessageAddTextRecord
  * 
  * @param payloadArray      pointer to the array to store in the e²p
- * @param encoding          pointer to the constant string which contains the encoding of the payloadArray area ("en" for example)
+ * @param isFirstRecord     =1 if the record is the first, =0 else
  * 
  * @return                  None
  * 
  *******************************************************************************/
 
-void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding, boolean isFirstRecord)
+void NdefMessageAddRecord(uint8_t *payloadArray, boolean isFirstRecord)
 {
     // Length of the payloadArray
     uint8_t length; 
@@ -35,44 +35,17 @@ void NdefMessageAddTextRecord(char *payloadArray, const rom char *encoding, bool
     NdefRecordConstructor(isFirstRecord);
     
     // Met le nombre de place que prends le payload
-    // On doit ajouter le nb de caractères de l'encodage + 1 car il faut aussi mettre le status byte
     if (payloadArray[INDEX_MSG_TYPE] == TYPE_TEMP) length = NB_DATA_BYTES_TEMP;
     else length = NB_DATA_BYTES_ACCEL;
-    NdefRecordSetPayloadLengh(length + strlenpgm(encoding) +1);
+    NdefRecordSetPayloadLengh(length);
     
-    // Record length = payload length + 4 car on doit ajouter le header, le type length (=1), le type et le status byte
-    NdefRecordSetRecordLength(NdefRecord._payloadLength+4);
-    
-    // Satus byte = encoding length car UTF-8
-    NdefRecordSetStatusByte(strlenpgm(encoding));
+    // Record length = value of the payload length + value of the type length + 3 car on doit ajouter le header, le type length et le payload length
+    NdefRecordSetRecordLength(NdefRecord._payloadLength + NdefRecord._typeLength + 3);
  
-    // Structure d'un payload de TNF "NFC Forum well-known type" et de type text:
-    // Payload = Status byte + ISO/IANA language code + actual 
-    // Voir NFC Forum "Text Record Type Definition"
-    strcatpgm2ram( NdefRecord._payload, encoding);
-    DataCat(NdefRecord._payload, payloadArray, length);
-}
-
-/**********************************************************************
- * Concatenate the data to send by NDEF in the payload, with the terminator at the end
- * Don't use strcat because there are no '\0' at the end of the string (impossible because the data can contain
- * null bytes!)
- * 
- * @param  *data    	 data to store in NDEF record
- * @param  *payload      payload of the NDEF record
- * @param  length        length of the data
- * @return none
- **********************************************************************/
-
-void DataCat(uint8_t *payload, char *data, uint8_t length){
-    uint8_t i, payloadlength;
-    payloadlength = strlen(payload);
+    memcpy(NdefRecord._payload, payloadArray, length);
     
-    for (i= 0; i< length; i++){
-        payload[i + payloadlength] = data[i];
-    }
-    payload[i + payloadlength] = NdefRecord._Teminator;
-}
+    NdefRecord._payload[length] = NdefRecord._Teminator;
+ }
 
 /**********************************************************************
  * Build the payload (in an array). 
@@ -80,41 +53,35 @@ void DataCat(uint8_t *payload, char *data, uint8_t length){
  * the accelerations in X, Y and Z, and the type of the accelerometer event.
  * If the type of the message is for temperature, the payload contain the datetime and the temperature.
  * 
- * @param  *payload     payload (in an array) to store in NDEF message
+ * @param  *payloadArray     payload (in an array) to store in NDEF message
  * @param  data         structure which contains the data to store in the payload      
  * @return Status       None
  **********************************************************************/
 
-void BuildMessage(char *payload, NDEFPayload_t data){
+void BuildMessage(uint8_t *payloadArray, NDEFPayload_t data){
+    
+    payloadArray[0] = data.day;
+    payloadArray[1] = data.month;
+    payloadArray[2] = data.year;
+    payloadArray[3] = data.hour;
+    payloadArray[4] = data.min;
+    payloadArray[5] = data.sec;
+    payloadArray[6] = 0xFF;
     
     if (data.type_message == TYPE_ACCEL){
-        payload[0] = data.day;
-        payload[1] = data.month;
-        payload[2] = data.year;
-        payload[3] = data.hour;
-        payload[4] = data.min;
-        payload[5] = data.sec;
-        payload[6] = 0xFF;
-        payload[7] = data.type_message;
-        payload[8] = data.Xacc.Nb8_B[1];
-        payload[9] = data.Xacc.Nb8_B[0];
-        payload[10] = data.Yacc.Nb8_B[1];
-        payload[11] = data.Yacc.Nb8_B[0];
-        payload[12] = data.Zacc.Nb8_B[1];
-        payload[13] = data.Zacc.Nb8_B[0];
-        payload[14] = data.Acc_event;
+        payloadArray[7] = data.type_message;
+        payloadArray[8] = data.Xacc.Nb8_B[1];
+        payloadArray[9] = data.Xacc.Nb8_B[0];
+        payloadArray[10] = data.Yacc.Nb8_B[1];
+        payloadArray[11] = data.Yacc.Nb8_B[0];
+        payloadArray[12] = data.Zacc.Nb8_B[1];
+        payloadArray[13] = data.Zacc.Nb8_B[0];
+        payloadArray[14] = data.Acc_event;
     }
     else if (data.type_message == TYPE_TEMP){
-        payload[0] = data.day;
-        payload[1] = data.month;
-        payload[2] = data.year;
-        payload[3] = data.hour;
-        payload[4] = data.min;
-        payload[5] = data.sec;
-        payload[6] = 0xFF;
-        payload[7] = data.type_message;
-        payload[8] = data.temp.Nb8_B[1];
-        payload[9] = data.temp.Nb8_B[0];  
+        payloadArray[7] = data.type_message;
+        payloadArray[8] = data.temp.Nb8_B[1];
+        payloadArray[9] = data.temp.Nb8_B[0];  
     }
 }
 
@@ -152,7 +119,7 @@ void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8
     data.Zacc.LongNb = Zacc.LongNb;
     data.Acc_event = Acc_event;
     
-    M24LR04E_SaveNdefRecord(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }
 
 /**********************************************************************
@@ -177,5 +144,26 @@ void STTS751SaveNdefMessage(IntTo8_t temp)
     data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
     data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
     
-    M24LR04E_SaveNdefRecord(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+}
+
+/**********************************************************************
+ * Concatenate the data to send by NDEF in the payload, with the terminator at the end
+ * Don't use strcat because there are no '\0' at the end of the string (impossible because the data can contain
+ * null bytes!)
+ * 
+ * @param  *data    	 data to store in NDEF record
+ * @param  *payload      payload of the NDEF record
+ * @param  length        length of the data
+ * @return none
+ **********************************************************************/
+
+void DataCat(uint8_t *payload, char *data, uint8_t length){
+    uint8_t i, payloadlength;
+    payloadlength = strlen(payload);
+    
+    for (i= 0; i< length; i++){
+        payload[i + payloadlength] = data[i];
+    }
+    payload[i + payloadlength] = NdefRecord._Teminator;
 }

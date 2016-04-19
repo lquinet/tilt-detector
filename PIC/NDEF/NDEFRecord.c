@@ -1,6 +1,6 @@
 #include "NDEFRecord.h"
 #include "../user.h"
-
+#include <string.h>
 
 /**********************************************************************
  * Definition dedicated to the global variable
@@ -8,7 +8,7 @@
 // variable utilisée dans les fonctions de NDEFMessage.c et M24LR04E_R
 _NdefRecord_t NdefRecord;
 
-void NdefRecordConstructor( boolean isFirstRecord)
+void NdefRecordConstructor(boolean isFirstRecord)
 {
     /******************* Memory ************************/
     // TLV Block
@@ -18,17 +18,17 @@ void NdefRecordConstructor( boolean isFirstRecord)
     
     /******************* NDEF Record ************************/
     if (isFirstRecord){
-        // 1 seul record (MB=1, ME=1); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
-        NdefRecord._RecordHeader=0xD1;
+        // 1 seul record (MB=1, ME=1); MIME media type (TNF=0x02); pas de record chunk ni d'ID (CF=IL=0)
+        NdefRecord._RecordHeader=0xD2; // 11010010
     }
     else {
-        // plusieurs records (MB=1, ME=1); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
-        NdefRecord._RecordHeader=0x51;
+        // plusieurs records (MB=0, ME=1); MIME media type (TNF=0x02); pas de record chunk ni d'ID (CF=IL=0)
+        NdefRecord._RecordHeader=0x52; // 1010010
     }
     
-    NdefRecord._typeLength = 1;
+    NdefRecord._typeLength = TYPE_LENGTH;
     NdefRecord._payloadLength = 0;
-    NdefRecord._type[0] = 'T'; // Type = 'T': encodage du payload en texte
+    memcpypgm2ram(NdefRecord._type, "application/octet-stream", TYPE_LENGTH);
     NdefRecord._Teminator =0xFE;
     
 }
@@ -46,17 +46,18 @@ void NdefRecordSetPayloadLengh(uint8_t numBytes)
     NdefRecord._payloadLength = numBytes;
 }
 
-void NdefRecordSetTLV_Length(uint8_t numBytes)
-{
-//    NdefRecord._TLV_Length = numBytes;
-}
-
-void NdefRecordSetStatusByte(uint8_t numBytes)
-{
-    NdefRecord._StatusByte = numBytes;
-}
 
 void NdefRecordSetRecordLength(uint8_t numBytes)
 {
     NdefRecord._recordLength = numBytes;
+}
+
+void NdefRecordSetStatusByte(uint8_t numBytes)
+{
+    //NdefRecord._StatusByte = numBytes;
+}
+
+void NdefRecordSetTLV_Length(uint8_t numBytes)
+{
+//    NdefRecord._TLV_Length = numBytes;
 }

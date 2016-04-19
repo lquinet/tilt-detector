@@ -59,7 +59,7 @@ StatusType M24LR04E_ReadBuffer(I2C_message_t *MemMsg,uint8_t address, IntTo8_t s
 StatusType M24LR04E_WriteByte(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t data);
 StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t subAddress, uint8_t *data, uint8_t NbByteToSend);
 StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address);
-StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address);
+StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, uint8_t address);
 void M24LR04E_UpdateHeader (I2C_message_t *MemMsg, uint8_t address, IntTo8_t lastSubAddressWrited, uint8_t sizeOfLastRecord);
 void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFirstRecord);
 void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct);

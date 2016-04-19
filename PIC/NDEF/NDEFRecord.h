@@ -19,7 +19,9 @@
 #define TNF_UNKNOWN 0x05
 #define TNF_UNCHANGED 0x06
 #define TNF_RESERVED 0x07
-  
+
+#define TYPE_LENGTH 24
+
 /**************** _NdefRecord_t: Structure of an NDEF record **********************************************************
  * @LOIC: 
  * CC = Capabylity Container (unused here! send at the initialization of the device!)
@@ -58,10 +60,10 @@ typedef struct Struct_NdefRecord {
     //  uint8_t _TLV_Tag;       
     //  uint8_t _TLV_Length;    
     uint8_t _RecordHeader; 
-    uint8_t _typeLength;
+    uint8_t _typeLength; // 24
     uint8_t _payloadLength;
-    uint8_t _type[1];    // for application/octet-stream
-    uint8_t _StatusByte;    
+    uint8_t _type[TYPE_LENGTH];    // application/octet-stream
+    //  uint8_t _StatusByte;    
     uint8_t _payload[200];
     uint8_t _recordLength; // for calculations
     uint8_t _Teminator; 

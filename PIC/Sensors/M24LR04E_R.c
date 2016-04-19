@@ -310,6 +310,8 @@ StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t
 StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
 
 {
+    /*
+     
     static IntTo8_t lastSubAddressWrited = 4; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
     char text[NB_MAX_DATA_BYTES];
@@ -318,10 +320,10 @@ StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding
     BuildMessage(text, data);
     
     // Creation of the NDEF message in NdefRecord structure
-    //NdefMessageAddTextRecord(text, encoding);
+    NdefMessageAddTextRecord(text, encoding);
     
     // Nb Bytes To Send = the value of the TLV Length byte + the TLV Length byte +  the TLV Length byte + TLV Tag byte + Terminator TLV
-    //NbByteToSend = NdefRecord._TLV_Length + 3;
+    NbByteToSend = NdefRecord._TLV_Length + 3;
     
     // Test if user e²prom memory is full
     if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
@@ -389,6 +391,8 @@ StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
     return E_OK;
+     
+    */
 }
 
 /**********************************************************************
@@ -397,21 +401,20 @@ StatusType M24LR04E_SaveNdefMessage(NDEFPayload_t data, const rom char *encoding
  * of this structure to send the frame to the e²p.
  * 
  * @param  data         data to store in NDEF message
- * @param  *encoding    The string of the encoding language         
  * @param  MemMsg    	IN  Mandatory I2C structure
  * @param  address    	The slave address of the M24LR04E
  * @return Status       E_OK if the EELC256 has been updated
  *                      E_OS_STATE if the I2C access failed
  **********************************************************************/
 
-StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding, I2C_message_t *MemMsg, uint8_t address)
+StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, uint8_t address)
 
 {
     static IntTo8_t lastSubAddressWrited = 0x08; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
     static uint8_t sizeOfLastRecord = 0;
     static IntTo8_t TLV_Length=0; // 3 Bytes format!
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
-    char text[NB_MAX_DATA_BYTES];
+    uint8_t payloadArray[NB_MAX_DATA_BYTES];
     IntTo8_t subAddress;
     
     // Test if user e²prom memory is full
@@ -425,17 +428,17 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, const rom char *encoding,
     }
     
     // Building of a string from the structure NDEFPayload_t
-    BuildMessage(text, data);
+    BuildMessage(payloadArray, data);
     
     if (lastSubAddressWrited.LongNb == 0x08) {
         // Creation of the NDEF message in NdefRecord structure
         // The record header is different if this is the first record or not
-        NdefMessageAddTextRecord(text, encoding, 1); 
+        NdefMessageAddRecord(payloadArray, 1); 
         
         M24LR04E_SetTLV_Block (MemMsg, address, 1);
     }
     else {
-        NdefMessageAddTextRecord(text, encoding, 0);
+        NdefMessageAddRecord(payloadArray, 0);
         
         // Update the header of the last record writed
         M24LR04E_UpdateHeader (MemMsg, address, lastSubAddressWrited, sizeOfLastRecord);
@@ -461,14 +464,14 @@ void M24LR04E_UpdateHeader (I2C_message_t *MemMsg, uint8_t address, IntTo8_t las
     if (LastRecordIsTheFirst){
         // plusieurs records (MB=1, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
         subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
-        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x91);
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x92); // 10010010
         
         LastRecordIsTheFirst = 0;
     }
     else {
         // plusieurs records (MB=0, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
         subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
-        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x11);
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x12); // 00010010
     }
 }
 
