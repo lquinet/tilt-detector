@@ -14,7 +14,7 @@ extern "C" {
 
 #include "user.h"
 
-//#define DEBUG_M24LR04E_R
+#define DEBUG_M24LR04E_R
 
 void Delay_ms(unsigned int delay);
 

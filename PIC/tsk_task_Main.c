@@ -126,14 +126,14 @@ TASK(TASK_Main)
     
     subAddress.LongNb = 0;
     M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-    
-    #endif
 
+    #endif
+    
     // Init peripherals
     InitSTTS751();
     M24LR04E_Init();
 	fxls8471q_init();
-    
+
     // Read user configuration from e²p memory
     M24LR04E_ReadConfigurationBytes(&configBytes);
     
@@ -189,6 +189,12 @@ TASK(TASK_Main)
     
     // END DEBUG
     
+    #ifdef DEBUG_M24LR04E_R
+    temperatureIntTo8.LongNb = 0b1111111100000000;
+    STTS751SaveNdefMessage(temperatureIntTo8);
+    STTS751SaveNdefMessage(temperatureIntTo8);
+    STTS751SaveNdefMessage(temperatureIntTo8);
+    #endif
     
     while (1)
     {
