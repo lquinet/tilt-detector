@@ -273,6 +273,11 @@ extern void fxls8471q_checkSourceInterrupt(void);
  *  @return  none
  */
 extern void fxls8471q_debug(uint8_t regAddr);
+/* @brief Change the mode of the device (wake or standby)
+ * @param mode FXLS8471Q_MODE_X 
+ * @return none
+ */
+extern void fxls8471q_switchMode(uint8_t mode);
 
 
 
