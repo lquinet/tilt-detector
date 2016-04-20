@@ -71,7 +71,6 @@ float tempMax=0;
 IntTo8_t XaccMax=0;
 IntTo8_t YaccMax=0;
 IntTo8_t ZaccMax=0;
-uint8_t Thresold_X_Y_Z;
 
 // Structure to send NDEF message
 NDEFPayload_t data;
@@ -99,7 +98,8 @@ TASK(TASK_Main)
     boolean isRF_WIP_BUSY = 0;
     boolean isTempExceeded = 0;
     uint8_t RF_ChangeByte;
-    
+    uint8_t Thresold_X_Y_Z;
+
     #ifdef DEBUG_M24LR04E_R
     
     /*

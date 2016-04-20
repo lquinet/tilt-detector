@@ -149,6 +149,7 @@ Purpose:  Convert the temperature given into a float
 Input:    IntTo8_t with the value to convert
 Returns:  float
 **************************************************************************/
+
 float emc1001_convertTemperature(IntTo8_t temperature)
 {
     float tempFloat;
