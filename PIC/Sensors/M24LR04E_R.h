@@ -25,6 +25,8 @@ typedef struct {
 
 } _ConfigBytes_t;
 
+#define DEBUG_M24LR04E_R
+
 // I2C addresses
 #define M24LR16_EEPROM_I2C_SLAVE_ADDRESS            0xA6 /* I2C DeviceSelect */
 
