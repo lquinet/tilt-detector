@@ -130,7 +130,7 @@ void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8
  * @return none
  **********************************************************************/
 
-void STTS751SaveNdefMessage(IntTo8_t temp) 
+void EMC1001SaveNdefMessage(IntTo8_t temp) 
 {
     RtccReadTimeDate(&Rtcc_read_TimeDate); //Rtcc_read_TimeDate will have latest time
     

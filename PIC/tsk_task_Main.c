@@ -43,7 +43,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "define.h"
-#include "tsk_task_Main.h"
 #include "user.h"
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
@@ -53,7 +52,6 @@
 #include "Sensors/EMC1001.h"
 #include "RTCC/MyRTCC.h"
 #include "sensors/FXLS8471Q.h"
-#include "sensors/FXLS8471Q_registers.h"
 
 extern boolean isMemoryFull;
 
@@ -79,6 +77,8 @@ NDEFPayload_t data;
 
 // Status of the package (UP or DOWN)
 uint8_t statusPackage;
+
+void Delay_ms(unsigned int delay);
 
 #ifdef DEBUG_M24LR04E_R
 char value[80]="";
@@ -139,7 +139,7 @@ TASK(TASK_Main)
     #endif
     
     // Init peripherals
-    InitSTTS751();
+    emc1001_init();
     M24LR04E_Init();
 	fxls8471q_init();
 
@@ -200,9 +200,9 @@ TASK(TASK_Main)
     
     #ifdef DEBUG_M24LR04E_R
     temperatureIntTo8.LongNb = 0b1111111100000000;
-    STTS751SaveNdefMessage(temperatureIntTo8);
-    STTS751SaveNdefMessage(temperatureIntTo8);
-    STTS751SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
     #endif
     
     while (1)
@@ -244,12 +244,12 @@ TASK(TASK_Main)
             // Reading Temperature every 60 sec
             if (counterRTCC%60 == 0){
                 // ROUTINE TEMPERATURE
-                ReadTemperatureSTTS751(&temperatureIntTo8);
-                temperatureFloat = ConvertTemperatureSTTS751(temperatureIntTo8);
+                emc1001_readTemperature(&temperatureIntTo8);
+                temperatureFloat = emc1001_convertTemperature(temperatureIntTo8);
                 if (isTempExceeded == 0){
                     if (temperatureFloat > tempMax){
                         isTempExceeded = 1;
-                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        EMC1001SaveNdefMessage(temperatureIntTo8);
                         #ifdef DEBUG_M24LR04E_R
                         subAddress.LongNb = 0;
                         M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
@@ -259,7 +259,7 @@ TASK(TASK_Main)
                 else {
                     if (temperatureFloat < tempMax){
                         isTempExceeded = 0;
-                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        EMC1001SaveNdefMessage(temperatureIntTo8);
                         #ifdef DEBUG_M24LR04E_R
                         subAddress.LongNb = 0;
                         M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);

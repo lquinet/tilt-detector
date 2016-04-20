@@ -7,7 +7,7 @@ License:  GNU General Public License 3
 Usage:    see Doxygen manual
 
 LICENSE:
-	Copyright (C) 2015 Julien Delvaux
+	Copyright (C) 2016 Julien Delvaux
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

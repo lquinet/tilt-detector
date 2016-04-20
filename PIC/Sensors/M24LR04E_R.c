@@ -4,7 +4,6 @@
 #include "M24LR04E_R.h"
 #include "../NDEF/NDEFMessage.h"
 #include "../NDEF/NDEFRecord.h"
-#include "../tsk_task_Main.h"
 #include "../RTCC/MyRTCC.h"
 #include "EMC1001.h"
 
@@ -184,7 +183,7 @@ void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct)
         // Temperature limits
         temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
         temperatureIntTo8.Nb8_B[0] = configurationBytes[21];
-        configBytesStruct->tempMax = ConvertTemperatureSTTS751(temperatureIntTo8);
+        configBytesStruct->tempMax = emc1001_convertTemperature(temperatureIntTo8);
     }
 } 
 
