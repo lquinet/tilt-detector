@@ -53,7 +53,7 @@
 #include "RTCC/MyRTCC.h"
 #include "sensors/FXLS8471Q.h"
 
-extern boolean isMemoryFull;
+extern boolean isMemoryFull; // TRUE if e²p memory is full
 
 /**********************************************************************
  * Definition dedicated to the Global variables
@@ -71,6 +71,7 @@ float tempMax=0;
 IntTo8_t XaccMax=0;
 IntTo8_t YaccMax=0;
 IntTo8_t ZaccMax=0;
+uint8_t Thresold_X_Y_Z;
 
 // Structure to send NDEF message
 NDEFPayload_t data;
@@ -97,6 +98,7 @@ TASK(TASK_Main)
     uint16_t counterRTCC=1;
     boolean isRF_WIP_BUSY = 0;
     boolean isTempExceeded = 0;
+    uint8_t RF_ChangeByte;
     
     #ifdef DEBUG_M24LR04E_R
     
@@ -153,7 +155,8 @@ TASK(TASK_Main)
     XaccMax.LongNb = configBytes.XaccMax.LongNb;
     YaccMax.LongNb = configBytes.YaccMax.LongNb;
     ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
-
+    Thresold_X_Y_Z = configBytes.Thresold_X_Y_Z;
+    
     // Copy Temperature limits
     tempMax = configBytes.tempMax;
     
@@ -200,9 +203,11 @@ TASK(TASK_Main)
     
     #ifdef DEBUG_M24LR04E_R
     temperatureIntTo8.LongNb = 0b1111111100000000;
+    
     EMC1001SaveNdefMessage(temperatureIntTo8);
     EMC1001SaveNdefMessage(temperatureIntTo8);
     EMC1001SaveNdefMessage(temperatureIntTo8);
+    
     #endif
     
     while (1)
@@ -241,6 +246,50 @@ TASK(TASK_Main)
                 }
             }
             
+            // Check if RF_Change every 20 sec to avoid collision with RF
+            if (counterRTCC%20 == 0){
+                // Check if RF_Change
+                if (isRF_WIP_BUSY){
+                    
+                    // disable isRF_WIP_BUSY
+                    isRF_WIP_BUSY = 0;
+                    // Enable INT1 interruptions
+                    INTCON3bits.INT1IE = 1;
+                    INTCON3bits.INT1IF = 0;
+                    
+                    // Wait RF communication stop
+                    while(!RF_WIP_BUSY);
+
+                    // Read RF_Change byte in e²p
+                    RF_ChangeByte = M24LR04E_ReadRF_Change();
+
+                    if(RF_ChangeByte == RF_Change_WithoutReset || RF_ChangeByte == RF_Change_Reset){
+                        // Read user configuration from e²p memory
+                        M24LR04E_ReadConfigurationBytes(&configBytes);
+
+                        // Check if RF change (change config or reset)
+                        if (configBytes.RF_Change == RF_Change_Reset){
+                            // RESET
+                            Reset();
+                        }
+                        else {
+                            // clear RF_CHANGE byte in e²p
+                            subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+                            M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
+
+                            // Copy accelerations limits
+                            XaccMax.LongNb = configBytes.XaccMax.LongNb;
+                            YaccMax.LongNb = configBytes.YaccMax.LongNb;
+                            ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
+                            Thresold_X_Y_Z = configBytes.Thresold_X_Y_Z;
+                            
+                            // Copy Temperature limits
+                            tempMax = configBytes.tempMax;
+                        }
+                    }
+                }
+            }
+            
             // Reading Temperature every 60 sec
             if (counterRTCC%60 == 0){
                 // ROUTINE TEMPERATURE
@@ -274,40 +323,7 @@ TASK(TASK_Main)
                 counterRTCC = 1;
                 writeDateTimeToConfigurationByte(); // Pour éviter que le transporteur ait retiré la pile pendant le trajet
             }
-            
-            // Check if RF_Change
-            if (isRF_WIP_BUSY){
-                // disable isRF_WIP_BUSY
-                isRF_WIP_BUSY = 0;
-                // Enable INT1 interruptions
-                INTCON3bits.INT1IE = 1;
-                
-                // Read user configuration from e²p memory
-                M24LR04E_ReadConfigurationBytes(&configBytes);
-                
-                // Check if RF change (change config or reset)
-                if (configBytes.RF_Change == RF_Change_WithoutReset || configBytes.RF_Change == RF_Change_Reset){
-                    // Status Package
-                    if (configBytes.RF_Change == RF_Change_Reset){
-                        // RESET
-                        Reset();
-                    }
-                    else {
-                        // clear RF_CHANGE byte in e²p
-                        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
-                        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
-
-                        // Copy accelerations limits
-                        XaccMax.LongNb = configBytes.XaccMax.LongNb;
-                        YaccMax.LongNb = configBytes.YaccMax.LongNb;
-                        ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
-
-                        // Copy Temperature limits
-                        tempMax = configBytes.tempMax;
-                    }
-                }
-            }
-            
+                        
             counterRTCC++;
         } // Fin if RTCC_EVENT
         
