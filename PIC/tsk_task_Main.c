@@ -156,6 +156,9 @@ TASK(TASK_Main)
     YaccMax.LongNb = configBytes.YaccMax.LongNb;
     ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
     Thresold_X_Y_Z = configBytes.Thresold_X_Y_Z;
+    fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
+    fxls8471q_configureMotionDetection(Thresold_X_Y_Z);
+    fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
     
     // Copy Temperature limits
     tempMax = configBytes.tempMax;
@@ -282,7 +285,9 @@ TASK(TASK_Main)
                             YaccMax.LongNb = configBytes.YaccMax.LongNb;
                             ZaccMax.LongNb = configBytes.ZaccMax.LongNb;
                             Thresold_X_Y_Z = configBytes.Thresold_X_Y_Z;
-                            
+                            fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
+                            fxls8471q_configureMotionDetection(Thresold_X_Y_Z);
+                            fxls8471q_switchMode(FXLS8471Q_MODE_WAKE);
                             // Copy Temperature limits
                             tempMax = configBytes.tempMax;
                         }
