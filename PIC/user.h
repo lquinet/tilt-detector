@@ -43,17 +43,8 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrorStatus;
 #define LedRed                  PORTDbits.RD7
 #define TRISLedRed              TRISDbits.TRISD7
 //--------------------------------------------------
-#define TEMP_INT                PORTDbits.RD5
-#define TRISTEMP_INT			TRISDbits.TRISD5
-
-#define ACC_INT2                PORTDbits.RD4
-#define TRISACC_INT2			TRISDbits.TRISD4
-
-#define ACC_INT1                PORTBbits.RB0
-#define TRISACC_INT1			TRISBbits.TRISB0
-
-#define RST_ACC                 PORTBbits.RB2
-#define TRISRST_ACC             TRISBbits.TRISB2
+//#define TEMP_INT                PORTDbits.RD5
+//#define TRISTEMP_INT			TRISDbits.TRISD5
 
 #define RF_WIP_BUSY             PORTBbits.RB1
 #define TRISRF_WIP_BUSY			TRISBbits.TRISB1
