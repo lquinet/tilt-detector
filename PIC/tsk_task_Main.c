@@ -98,7 +98,9 @@ TASK(TASK_Main)
     boolean isRF_WIP_BUSY = 0;
     boolean isTempExceeded = 0;
     uint8_t RF_ChangeByte;
-    uint8_t Thresold_X_Y_Z;
+    uint8_t Thresold_X_Y_Z = 0x10;
+    uint8_t tempHigh;
+    uint8_t tempLow;
 
     #ifdef DEBUG_M24LR04E_R
     
@@ -129,11 +131,18 @@ TASK(TASK_Main)
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+5;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0);
     
+    tempMax = 15;
+    tempHigh = (uint8_t) (((int16_t)(tempMax*4) & 0xFFFC) /4);
+    tempLow = (uint8_t) (((int16_t)(tempMax*4) & 0x03) << 6);
+    
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_TEMP_LIMITS;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0b11111111);
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,tempHigh);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_TEMP_LIMITS+1;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0b00000000);
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,tempLow);
+    
+    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_ACCEL_THRESOLD_X_Y_Z;
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0x10);
     
     subAddress.LongNb = 0;
     M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
@@ -162,7 +171,7 @@ TASK(TASK_Main)
     
     // Copy Temperature limits
     tempMax = configBytes.tempMax;
-    
+
     // Start RTCC
     StartRTCC(configBytes.DateTime);
 
@@ -304,20 +313,13 @@ TASK(TASK_Main)
                     if (temperatureFloat > tempMax){
                         isTempExceeded = 1;
                         EMC1001SaveNdefMessage(temperatureIntTo8);
-                        #ifdef DEBUG_M24LR04E_R
-                        subAddress.LongNb = 0;
-                        M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-                        #endif
+                        SetStatusPackageDown (&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
                     }
                 }
                 else {
                     if (temperatureFloat < tempMax){
                         isTempExceeded = 0;
                         EMC1001SaveNdefMessage(temperatureIntTo8);
-                        #ifdef DEBUG_M24LR04E_R
-                        subAddress.LongNb = 0;
-                        M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-                        #endif
                     }
                 }
                 
