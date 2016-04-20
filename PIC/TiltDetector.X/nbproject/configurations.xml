@@ -15,7 +15,6 @@
       <itemPath>../sensors/FXLS8471Q.h</itemPath>
       <itemPath>../sensors/FXLS8471Q_registers.h</itemPath>
       <itemPath>../sensors/M24LR04E_R.h</itemPath>
-      <itemPath>../tsk_task_Main.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
