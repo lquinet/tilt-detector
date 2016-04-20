@@ -43,7 +43,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "define.h"
-#include "tsk_task_Main.h"
 #include "user.h"
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
@@ -53,7 +52,6 @@
 #include "Sensors/EMC1001.h"
 #include "RTCC/MyRTCC.h"
 #include "sensors/FXLS8471Q.h"
-#include "sensors/FXLS8471Q_registers.h"
 
 /**********************************************************************
  * Definition dedicated to the Global variables
@@ -77,6 +75,8 @@ NDEFPayload_t data;
 
 // Status of the package (UP or DOWN)
 uint8_t statusPackage;
+
+void Delay_ms(unsigned int delay);
 
 #ifdef DEBUG_M24LR04E_R
 char value[80]="";
@@ -132,7 +132,7 @@ TASK(TASK_Main)
     #endif
     
     // Init peripherals
-    InitSTTS751();
+    emc1001_init();
     M24LR04E_Init();
 	fxls8471q_init();
 
@@ -228,8 +228,8 @@ TASK(TASK_Main)
             // Reading Temperature every 60 sec
             if (counterRTCC%60 == 0){
                 // ROUTINE TEMPERATURE
-                ReadTemperatureSTTS751(&temperatureIntTo8);
-                temperatureFloat = ConvertTemperatureSTTS751(temperatureIntTo8);
+                emc1001_readTemperature(&temperatureIntTo8);
+                temperatureFloat = emc1001_convertTemperature(temperatureIntTo8);
                 if (isTempExceeded == 0){
                     if (temperatureFloat > tempMax){
                         isTempExceeded = 1;
