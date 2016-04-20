@@ -1,50 +1,51 @@
-#include <rtcc.h>
-#include "../RTCC/MyRTCC.h"
+/*************************************************************************
+	
+	EMC1001 library by Loic Quinet & Julien Delvaux
+
+*************************************************************************/
+
 #include "EMC1001.h"
 #include "drivers/drv_i2c.h"
 #include "../Sensors/M24LR04E_R.h"
-#include "EMC1001.h"
-#include "../tsk_task_Main.h"
 
+/************************************************************************/
+/* Constants and macros                                                 */
+/************************************************************************/
 extern I2C_message_t My_I2C_Message;
 
-void InitSTTS751()
-{
-    // ALERT disabled and Standby mode
-    STTS751WriteByte(&My_I2C_Message, STTS751_ADDRESS, Configuration, 0xC0);
-    //STTS751WriteByte(&My_I2C_Message, STTS751_ADDRESS, Configuration, 0x00);
-}
+#define EMC1001_ADDRESS     0x90
+#define EMC1001_Product_ID                  0xFD
+#define EMC1001_Manufacturer_ID             0xFE
+#define EMC1001_Revision_number             0xFF
 
-void ReadTemperatureSTTS751(IntTo8_t *temperature)
-{   
-    // Writing to the one-shot register while in standby mode initiates a conversion and comparison cycle
-    STTS751WriteByte(&My_I2C_Message, STTS751_ADDRESS, One_shot, 0xFF);
-    temperature->Nb8_B[1] = STTS751ReadByte(&My_I2C_Message, STTS751_ADDRESS, Temperature_value_high);
-    temperature->Nb8_B[0] = STTS751ReadByte(&My_I2C_Message, STTS751_ADDRESS, Temperature_value_low);
-}
+#define EMC1001_Temperature_value_high      0x00
+#define EMC1001_Temperature_value_low       0x02
+#define EMC1001_Temperature_high_limit_high 0x05
+#define EMC1001_Temperature_high_limit_low  0x06
+#define EMC1001_Temperature_low_limit_high  0x07
+#define EMC1001_Temperature_low_limit_low   0x08
 
-float ConvertTemperatureSTTS751(IntTo8_t temperature)
-{
-    float tempFloat;
-    
-    if ((int8_t) temperature.Nb8_B[1] >= 0){
-        return (float) ((uint16_t)temperature.Nb8_B[1]<<2 | temperature.Nb8_B[0]>>6)/4;
-    }
-    else {
-        tempFloat = (float) ( (int16_t)(temperature.Nb8_B[1]<<8)/64 | (temperature.Nb8_B[0]>>6) )/4;
-        return tempFloat;
-    }
-}
+#define EMC1001_Configuration               0x03    //POR 0000 0000
+#define EMC1001_Conversion_rate             0x04    //POR 0000 0100
+#define EMC1001_Status                      0x01
 
-/**********************************************************************
- *
- *
- * @param  MemMsg    	 IN  Mandatory I2C structure
- * @param
- * @return Status         E_OK if the STTS751 has been updated
- *                        E_OS_STATE if the I2C access failed
- **********************************************************************/
-StatusType STTS751WriteByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddress, uint8_t data)
+#define EMC1001_One_shot                    0x0F
+#define EMC1001_THERM_limit                 0x20
+#define EMC1001_THERM_hysteresis            0x21
+#define EMC1001_SMBus_timeout_enable        0x22
+
+
+/************************************************************************/
+/* Private functions                                                    */
+/************************************************************************/
+/* @brief Write the data into the register
+ * @param MemMsg I2C message
+ * @param address I2C slave device address
+ * @param subAddress Register to write to
+ * @param data Value to be written in the register
+ * @return StatusType
+ */
+StatusType EMC1001_writeByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddress, uint8_t data)
 {
     unsigned char pData;
 
@@ -64,7 +65,7 @@ StatusType STTS751WriteByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subA
     // 1 = SMBbus Enabled, 0 = Disabled
     MemMsg->flags.SMBus = 1;
     
-     MemMsg->flags.error = 0;//Attention important de le reseter!!!
+    MemMsg->flags.error = 0;//Attention important de le reseter!!!
 
     pData = data;
 
@@ -78,18 +79,15 @@ StatusType STTS751WriteByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subA
     return E_OK;
 }
 
-/**********************************************************************
- * Read a single byte from subaddress
- *
- * @param  MemMsg    	IN  Mandatory I2C structure
- * @param
- * @return Status         E_OK if the STTS751 has been read
- *                        E_OS_STATE if the I2C access failed
- **********************************************************************/
-uint8_t STTS751ReadByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddress)
+/* @brief Read the data from the register
+ * @param MemMsg I2C message
+ * @param address I2C slave device address
+ * @param subAddress Register to write to
+ * @return uint8_t with the value
+ */
+uint8_t EMC1001_readByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddress)
 {
     unsigned char pData[1];
-    uint8_t temp=0;
 
     MemMsg->control = address | 0x01;
     //  High byte of addr, only used if high bit set
@@ -116,6 +114,50 @@ uint8_t STTS751ReadByte(I2C_message_t *MemMsg, uint8_t address, uint8_t subAddre
 
     if (MemMsg->flags.error != 0)
         return E_OS_STATE;
-temp=pData[0];
-    return temp;
+
+    return pData[0];
+}
+
+/*************************************************************************
+Function: emc1001_init()
+Purpose:  Initialise the EMC1001 in standby and ALERT disable
+Input:    none
+Returns:  none
+**************************************************************************/
+void emc1001_init()
+{
+    EMC1001_writeByte(&My_I2C_Message, EMC1001_ADDRESS, EMC1001_Configuration, 0xC0);
+}
+
+/*************************************************************************
+Function: emc1001_readTemperature()
+Purpose:  Read the temperature from EMC1001
+Input:    IntTo8_t pointer to the return value
+Returns:  none
+**************************************************************************/
+void emc1001_readTemperature(IntTo8_t *temperature)
+{   
+    // Writing to the one-shot register while in standby mode initiates a conversion and comparison cycle
+    EMC1001_writeByte(&My_I2C_Message, EMC1001_ADDRESS, EMC1001_One_shot, 0xFF);
+    temperature->Nb8_B[1] = EMC1001_readByte(&My_I2C_Message, EMC1001_ADDRESS, EMC1001_Temperature_value_high);
+    temperature->Nb8_B[0] = EMC1001_readByte(&My_I2C_Message, EMC1001_ADDRESS, EMC1001_Temperature_value_low);
+}
+
+/*************************************************************************
+Function: emc1001_convertTemperature()
+Purpose:  Convert the temperature given into a float
+Input:    IntTo8_t with the value to convert
+Returns:  float
+**************************************************************************/
+float emc1001_convertTemperature(IntTo8_t temperature)
+{
+    float tempFloat;
+    
+    if ((int8_t) temperature.Nb8_B[1] >= 0){
+        return (float) ((uint16_t)temperature.Nb8_B[1]<<2 | temperature.Nb8_B[0]>>6)/4;
+    }
+    else {
+        tempFloat = (float) ( (int16_t)(temperature.Nb8_B[1]<<8)/64 | (temperature.Nb8_B[0]>>6) )/4;
+        return tempFloat;
+    }
 }
