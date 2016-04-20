@@ -55,6 +55,8 @@
 #include "sensors/FXLS8471Q.h"
 #include "sensors/FXLS8471Q_registers.h"
 
+extern boolean isMemoryFull;
+
 /**********************************************************************
  * Definition dedicated to the Global variables
  **********************************************************************/
@@ -98,9 +100,14 @@ TASK(TASK_Main)
     
     #ifdef DEBUG_M24LR04E_R
     
+    /*
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
     statusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
+     * */
+    
+    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,RF_Change_Reset);
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 13);
@@ -209,19 +216,28 @@ TASK(TASK_Main)
             ClearEvent(RTCC_EVENT );
             // Toggle LED (toutes les 2 sec)
             if (counterRTCC%2 == 0) {
-                if (statusPackage == ColisDown)
-                {
-                    LedGreen = 0;
+                if (!isMemoryFull){
+                    if (statusPackage == ColisDown)
+                    {
+                        LedGreen = 0;
+                        LedRed = 1;
+                        Delay_ms(100);
+                        LedRed = 0;
+                    } else
+                        if (statusPackage == ColisUP)
+                    {
+                        LedRed = 0;
+                        LedGreen = 1;
+                        Delay_ms(100);
+                        LedGreen = 0;
+                    }
+                }
+                else { // E²p memory is full!!! The led blink in orange
+                    LedGreen = 1;
                     LedRed = 1;
                     Delay_ms(100);
-                    LedRed = 0;
-                } else
-                    if (statusPackage == ColisUP)
-                {
-                    LedRed = 0;
-                    LedGreen = 1;
-                    Delay_ms(100);
                     LedGreen = 0;
+                    LedRed = 0;
                 }
             }
             
@@ -273,14 +289,10 @@ TASK(TASK_Main)
                 if (configBytes.RF_Change == RF_Change_WithoutReset || configBytes.RF_Change == RF_Change_Reset){
                     // Status Package
                     if (configBytes.RF_Change == RF_Change_Reset){
-                        // clear RF_CHANGE byte in e²p
-                        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
-                        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
-
                         // RESET
                         Reset();
                     }
-                    if (configBytes.RF_Change == RF_Change_WithoutReset){
+                    else {
                         // clear RF_CHANGE byte in e²p
                         subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
                         M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
