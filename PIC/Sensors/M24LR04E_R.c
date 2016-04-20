@@ -16,19 +16,31 @@ extern uint8_t statusPackage; // Status of the package (UP or DOWN)
 /**********************************************************************
  * Definition dedicated to the global variable
  **********************************************************************/
-boolean isMemoryFull;
+boolean isMemoryFull = MemoryNotFull;
 
 
 void M24LR04E_Init (void)
 {
     IntTo8_t subAddress;
+    uint8_t RF_ChangeByte;
     
     // Save the Capabylity Container in M24LR04E
     M24LR04E_SaveCC(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
     
-    // Set the first TLV block to terminator (0xFE) to erase the user memory
-    subAddress.LongNb = 0x04;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0xFE);
+    
+    // Read RF_CHANGE byte in e²p
+    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+    RF_ChangeByte = M24LR04E_ReadOneByte(&My_I2C_Message , M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
+    
+    if (RF_ChangeByte == RF_Change_Reset){
+        // clear RF_CHANGE byte in e²p
+        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
+
+        // Set the first TLV block to terminator (0xFE) to erase the user memory
+        subAddress.LongNb = 0x04;
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0xFE);
+    }
     
     // RF_WIP_BUSY in input
     TRISRF_WIP_BUSY = 1;
@@ -417,16 +429,6 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, ui
     uint8_t payloadArray[NB_MAX_DATA_BYTES];
     IntTo8_t subAddress;
     
-    // Test if user e²prom memory is full
-    if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
-    {
-        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
-        
-        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, MemoryFull);
-        isMemoryFull = MemoryFull;
-        return E_OS_STATE;
-    }
-    
     // Building of a string from the structure NDEFPayload_t
     BuildMessage(payloadArray, data);
     
@@ -449,8 +451,20 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, ui
 
     // Nb Bytes To Send = record Length + Terminator TLV
     NbByteToSend = NdefRecord._recordLength + 1;
-    M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
     
+    // Test if user e²prom memory is full
+    if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
+    {
+        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
+        
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, MemoryFull);
+        isMemoryFull = MemoryFull;
+        return E_OS_STATE;
+    }
+    else {
+        M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
+    }
+        
     // Retain the last adress writed
     lastSubAddressWrited.LongNb += NbByteToSend - 1;
     // Retain the size of the last record
