@@ -1,13 +1,19 @@
+#include <string.h>
 #include "NDEFMessage.h"
 #include "NDEFRecord.h"
 #include "../Sensors/M24LR04E_R.h"
 #include "../RTCC/MyRTCC.h"
-#include <string.h>
 #include "../user.h"
 
 extern I2C_message_t My_I2C_Message;
 extern NDEFPayload_t data;
 extern _NdefRecord_t NdefRecord;
+extern boolean isMemoryFull; // TRUE if e²p memory is full
+
+/**********************************************************************
+ * Definition dedicated to the global variable
+ **********************************************************************/
+boolean isMemoryFull = MemoryNotFull;
 
 /*******************************************************************************
  * Build the NDEF message.
@@ -119,7 +125,7 @@ void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8
     data.Zacc.LongNb = Zacc.LongNb;
     data.Acc_event = Acc_event;
     
-    M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    if (!isMemoryFull) M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
 }
 
 /**********************************************************************
@@ -144,7 +150,149 @@ void EMC1001SaveNdefMessage(IntTo8_t temp)
     data.min = BcdHexToBcdDec(Rtcc_read_TimeDate.f.min);
     data.sec = BcdHexToBcdDec(Rtcc_read_TimeDate.f.sec);
     
-    M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+    if (!isMemoryFull) M24LR04E_SaveNdefRecord(data, &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
+}
+
+/**********************************************************************
+ * Save a new NDEF record that contain the datetime and temperature or acceleration.
+ * The NDEF record is contained in the _NdefRecord_t structure,and we'll cross the memory 
+ * of this structure to send the frame to the e²p.
+ * 
+ * @param  data         data to store in NDEF message
+ * @param  MemMsg    	IN  Mandatory I2C structure
+ * @param  address    	The slave address of the M24LR04E
+ * @return Status       E_OK if the EELC256 has been updated
+ *                      E_OS_STATE if the I2C access failed
+ **********************************************************************/
+StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, uint8_t address)
+
+{
+    static IntTo8_t lastSubAddressWrited = 0x08; // Last address in the e²prom memory writed to save an NDEF message. Initialy to 4 due to the capability container
+    static uint8_t sizeOfLastRecord = 0;
+    static IntTo8_t TLV_Length=0; // 3 Bytes format!
+    uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
+    uint8_t payloadArray[NB_MAX_DATA_BYTES];
+    IntTo8_t subAddress;
+    
+    // Building of a string from the structure NDEFPayload_t
+    BuildMessage(payloadArray, data);
+    
+    if (lastSubAddressWrited.LongNb == 0x08) {
+        // Creation of the NDEF message in NdefRecord structure
+        // The record header is different if this is the first record or not
+        NdefMessageAddRecord(payloadArray, 1); 
+        
+        M24LR04E_SetTLV_Block (MemMsg, address, 1);
+    }
+    else {
+        NdefMessageAddRecord(payloadArray, 0);
+        
+        // Update the header of the last record writed
+        M24LR04E_UpdateHeader (MemMsg, address, lastSubAddressWrited, sizeOfLastRecord);
+        
+        // Update the TLV length
+        M24LR04E_SetTLV_Block (MemMsg, address, 0);
+    }
+
+    // Nb Bytes To Send = record Length + Terminator TLV
+    NbByteToSend = NdefRecord._recordLength + 1;
+    
+    // Test if user e²prom memory is full
+    if (lastSubAddressWrited.LongNb + NbByteToSend +1 >= M24LR16_EEPROM_LAST_ADDRESS_DATALOGGER)
+    {
+        subAddress.LongNb = M24LR16_EEPROM_ADDRESS_FULL_MEMORY;
+        
+        M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, MemoryFull);
+        isMemoryFull = MemoryFull;
+        return E_OS_STATE;
+    }
+    else {
+        M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
+    }
+        
+    // Retain the last adress writed
+    lastSubAddressWrited.LongNb += NbByteToSend - 1;
+    // Retain the size of the last record
+    sizeOfLastRecord = NdefRecord._recordLength;
+}
+
+/**********************************************************************
+ * Update the header of the last record to modify the MB and the ME bits.
+ * 
+ * @param  lastSubAddressWrited     Last adress writed in the M24LR04E memory during the last record
+ * @param  sizeOfLastRecord         Size of the last record writed in the M24LR04E memory
+ * @param  MemMsg                   IN  Mandatory I2C structure
+ * @param  address                  The slave address of the M24LR04E
+ * @return None
+ **********************************************************************/
+void M24LR04E_UpdateHeader (I2C_message_t *MemMsg, uint8_t address, IntTo8_t lastSubAddressWrited, uint8_t sizeOfLastRecord){
+    IntTo8_t subAddress;
+    static boolean LastRecordIsTheFirst=1;
+    
+    if (LastRecordIsTheFirst){
+        // plusieurs records (MB=1, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+        subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x92); // 10010010
+        
+        LastRecordIsTheFirst = 0;
+    }
+    else {
+        // plusieurs records (MB=0, ME=0); well-known type (TNF=1); pas de record chunk ni d'ID (CF=IL=0)
+        subAddress.LongNb = lastSubAddressWrited.LongNb - sizeOfLastRecord;
+        M24LR04E_WriteByte(&My_I2C_Message, address, subAddress, 0x12); // 00010010
+    }
+}
+
+/**********************************************************************
+ * Set or update the TLV Block (TLV length and TLV tag) at the beginning of the memory for the new record
+ * 
+ * @param  isFirstRecord            TRUE if the record to write in the memory is the first of the NDEF message
+ * @param  MemMsg                   IN  Mandatory I2C structure
+ * @param  address                  The slave address of the M24LR04E
+ * @return None
+ **********************************************************************/
+void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFirstRecord){
+    static IntTo8_t TLV_Length=0; // 3 Bytes format!
+    uint8_t TLV_Block[3];
+    IntTo8_t subAddress;
+    
+    // Écriture TLV Tag si premier NDEF record
+    if (isFirstRecord){
+        subAddress.LongNb = 0x04;
+        M24LR04E_WriteByte(MemMsg, address, subAddress, TLV_TAG);
+    }
+    // Writing of the TLV Length
+    // TLV_Length = the record Length
+    TLV_Length.LongNb += NdefRecord._recordLength;
+    
+    TLV_Block[0] = 0xFF; // 3 bytes format
+    TLV_Block[1] = TLV_Length.Nb8_B[1]; // byte high
+    TLV_Block[2] = TLV_Length.Nb8_B[0]; // Byte low
+
+    subAddress.LongNb = 0x05;
+    M24LR04E_WriteNBytes(MemMsg, address, subAddress, TLV_Block, 3);
+}
+
+
+/**********************************************************************
+ * Save the  Capabylity Container in M24LR04E with the values {0xE1, 0x40, 0xFF, 0x00}
+ * CC byte 0: NDEF magic number (tag which contains NDEF message)
+ * CC byte 1: VNo (Version NDEF utilisé; 4.0 ici)
+ * CC byte 2: Tag Memory Size (Taille de la zone de données = TMS*8)
+ * CC byte 3: Read/Write Access (nibble 0 = accès en lecture; nibble 1 = accès en écriture)
+ *
+ * @param  MemMsg    	 IN  Mandatory I2C structure
+ * @return Status         E_OK if the EELC256 has been updated
+ *                        E_OS_STATE if the I2C access failed
+ **********************************************************************/
+StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
+{
+    // pData[0] = CC1, pData[1] = CC2, pData[2] = CC3, pData[3] = CC4
+    unsigned char pData[4] = {CC1, CC2, CC3, CC4};
+    IntTo8_t subAddress;
+    
+    subAddress.LongNb = 0;
+    M24LR04E_WriteNBytes(MemMsg, address, subAddress, pData, 4);
 }
 
 /**********************************************************************

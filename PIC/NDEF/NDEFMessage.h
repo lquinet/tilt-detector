@@ -9,6 +9,13 @@
 #define	NDEFMESSAGE_H
 
 #include "../user.h"
+#include "../drivers/drv_i2c.h"
+
+/********************** Capability container ****************/
+#define CC1 0xE1
+#define CC2 0x40
+#define CC3 0xFF
+#define CC4 0x00
 
 /*********************** TLV BLOCK **************************/
 #define TLV_TAG 0x03
@@ -52,6 +59,10 @@ void DataCat(uint8_t *payload, char *text, uint8_t length);
 void BuildMessage(uint8_t *payloadArray, NDEFPayload_t data);
 void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
 void EMC1001SaveNdefMessage(IntTo8_t temp);
+StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, uint8_t address);
+void M24LR04E_UpdateHeader (I2C_message_t *MemMsg, uint8_t address, IntTo8_t lastSubAddressWrited, uint8_t sizeOfLastRecord);
+void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFirstRecord);
+StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address);
 
 #endif	/* NDEFMESSAGE_H */
 
