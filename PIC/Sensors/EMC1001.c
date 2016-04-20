@@ -13,7 +13,7 @@
 /************************************************************************/
 extern I2C_message_t My_I2C_Message;
 
-#define EMC1001_ADDRESS     0x90
+#define EMC1001_ADDRESS                     0x90
 #define EMC1001_Product_ID                  0xFD
 #define EMC1001_Manufacturer_ID             0xFE
 #define EMC1001_Revision_number             0xFF
