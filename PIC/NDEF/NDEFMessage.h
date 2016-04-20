@@ -51,7 +51,7 @@ void NdefMessageAddRecord(uint8_t *payloadArray, boolean isFirstRecord);
 void DataCat(uint8_t *payload, char *text, uint8_t length);
 void BuildMessage(uint8_t *payloadArray, NDEFPayload_t data);
 void FXLS8471QSaveNdefMessage(IntTo8_t Xacc, IntTo8_t Yacc, IntTo8_t Zacc, uint8_t Acc_event);
-void STTS751SaveNdefMessage(IntTo8_t temp);
+void EMC1001SaveNdefMessage(IntTo8_t temp);
 
 #endif	/* NDEFMESSAGE_H */
 

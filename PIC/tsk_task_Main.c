@@ -193,9 +193,9 @@ TASK(TASK_Main)
     
     #ifdef DEBUG_M24LR04E_R
     temperatureIntTo8.LongNb = 0b1111111100000000;
-    STTS751SaveNdefMessage(temperatureIntTo8);
-    STTS751SaveNdefMessage(temperatureIntTo8);
-    STTS751SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
+    EMC1001SaveNdefMessage(temperatureIntTo8);
     #endif
     
     while (1)
@@ -233,7 +233,7 @@ TASK(TASK_Main)
                 if (isTempExceeded == 0){
                     if (temperatureFloat > tempMax){
                         isTempExceeded = 1;
-                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        EMC1001SaveNdefMessage(temperatureIntTo8);
                         #ifdef DEBUG_M24LR04E_R
                         subAddress.LongNb = 0;
                         M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
@@ -243,7 +243,7 @@ TASK(TASK_Main)
                 else {
                     if (temperatureFloat < tempMax){
                         isTempExceeded = 0;
-                        STTS751SaveNdefMessage(temperatureIntTo8);
+                        EMC1001SaveNdefMessage(temperatureIntTo8);
                         #ifdef DEBUG_M24LR04E_R
                         subAddress.LongNb = 0;
                         M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
