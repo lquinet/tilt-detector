@@ -163,6 +163,9 @@ void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct)
         // Status Package
         configBytesStruct->statusPackage = configurationBytes[0];
         
+        //RF_Change
+        configBytesStruct->RF_Change = configurationBytes[1];
+        
         // DateTime
         memcpy(configBytesStruct->DateTime, configurationBytes+4, 6);
         convertCharArrayToBCD(configBytesStruct->DateTime, 6);
