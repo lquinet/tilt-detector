@@ -49,8 +49,8 @@ LICENSE:
 #define FXLS8471Q_RST_TRIS      TRISBbits.TRISB2
 #define FXLS8471Q_INT1_PORT     PORTBbits.RB0
 #define FXLS8471Q_INT1_TRIS		TRISBbits.TRISB0
-#define FXLS8471Q_INT2_PORT     PORTBbits.RB3//PORTDbits.RD4
-#define FXLS8471Q_INT2_TRIS		TRISBbits.TRISB3//TRISDbits.TRISD4
+#define FXLS8471Q_INT2_PORT     PORTDbits.RD4
+#define FXLS8471Q_INT2_TRIS		TRISDbits.TRISD4
 
 // Modes
 #define FXLS8471Q_MODE_STANDBY  0
@@ -209,10 +209,10 @@ extern uint8_t fxls8471q_testConnection(void);
 extern void fxls8471q_calibrate(uint8_t mode);
 /**
  *  @brief   Configure the accelerometer.
- *  @param   none
+ *  @param   thresold value for x-y-z axis motion
  *  @return  none
  */
-extern void fxls8471q_configure(void);
+extern void fxls8471q_configure(uint8_t thresold);
 /**
  *  @brief   Read the acceleration value in the accelerometer.
  *  @param   x,y,z int16 pointer with the accelerometer value of the corresponding axis
@@ -227,10 +227,10 @@ extern void fxls8471q_getAcceleration(int16_t *x, int16_t *y, int16_t *z);
 extern void fxls8471q_configureOrientationDetection(uint8_t dbnce);
 /**
  *  @brief   Configure the accelerometer to detect the motion.
- *  @param   none
+ *  @param   thresold value
  *  @return  none
  */
-extern void fxls8471q_configureMotionDetection(void);
+extern void fxls8471q_configureMotionDetection(uint8_t thresold);
 /**
  *  @brief   Configure the freefall detection.
  *  @param   none

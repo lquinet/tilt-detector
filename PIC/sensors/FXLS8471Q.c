@@ -453,7 +453,7 @@ void fxls8471q_init(void){
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q connected !\r\n");
         #endif
-        fxls8471q_configure();
+        fxls8471q_configure(0x10);
         #ifdef DEBUG_FXLS8471Q
         Printf("FXLS8471Q initialisation finished !\r\n");
         #endif
@@ -538,10 +538,10 @@ void fxls8471q_calibrate(uint8_t mode)
 /*************************************************************************
 Function: fxls8471q_configure()
 Purpose:  Configure the accelerometer
-Input:    none
+Input:    thresold value for x-y-z axis motion
 Returns:  none
 **************************************************************************/
-void fxls8471q_configure(void){
+void fxls8471q_configure(uint8_t thresold){
 
     fxls8471q_switchMode(FXLS8471Q_MODE_STANDBY); //switch to standby mode
     fxls8471q_calibrate(FXLS8471Q_FS_2); // calibrate to use +-2g
@@ -556,7 +556,7 @@ void fxls8471q_configure(void){
     fxls8471q_setMods(FXLS8471Q_PM_HR);
     // Configure the features activated
     fxls8471q_configureOrientationDetection(0x05); // avoid detection if shaking -- increase if too much interruptions 0x28
-    fxls8471q_configureMotionDetection();
+    fxls8471q_configureMotionDetection(thresold);
     //fxls8471q_configureTapDetection();
     //fxls8471q_configureFreefallDetection();
     
@@ -593,14 +593,14 @@ void fxls8471q_configureOrientationDetection(uint8_t dbnce){
 /*************************************************************************
 Function: fxls8471q_configureMotionDetection()
 Purpose:  Configure the accelerometer to detect the motion
-Input:    none
+Input:    thresold value
 Returns:  none
 **************************************************************************/
-void fxls8471q_configureMotionDetection(void){
+void fxls8471q_configureMotionDetection(uint8_t thresold){
     // Set configuration register for motion detection
     fxls8471q_setFFMT_CFG(FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_MOTION, FXLS8471Q_FFMT_DISABLE, FXLS8471Q_FFMT_ENABLE,FXLS8471Q_FFMT_ENABLE);
     // Set the threshold value ; e.g. : >1g : 1g/0.063g=16
-    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, 0x10); 
+    I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_THS, thresold); //0x10
     // Set the debounce counter to eliminate false reading (see Table 89)
     I2C_writeRegister(FXLS8471Q_ADDRESS, FXLS8471Q_FFMT_COUNT, 0x00); //0x0a
 }
