@@ -173,6 +173,7 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, ui
     uint8_t i = 0, NbByteToSend = 0, NbByteSended = 0;
     uint8_t payloadArray[NB_MAX_DATA_BYTES];
     IntTo8_t subAddress;
+    StatusType ret;
     
     // Building of a string from the structure NDEFPayload_t
     BuildMessage(payloadArray, data);
@@ -207,13 +208,15 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, ui
         return E_OS_STATE;
     }
     else {
-        M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
+        ret = M24LR04E_WriteNBytes(MemMsg, address, lastSubAddressWrited, (unsigned char *) &NdefRecord, NbByteToSend);
     }
         
     // Retain the last adress writed
     lastSubAddressWrited.LongNb += NbByteToSend - 1;
     // Retain the size of the last record
     sizeOfLastRecord = NdefRecord._recordLength;
+    
+    return ret;
 }
 
 /**********************************************************************
