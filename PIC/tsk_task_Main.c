@@ -78,7 +78,6 @@ NDEFPayload_t data;
 // Status of the package (UP or DOWN)
 uint8_t statusPackage;
 
-void Delay_ms(unsigned int delay);
 
 #ifdef DEBUG_M24LR04E_R
 char value[80]="";
@@ -99,54 +98,7 @@ TASK(TASK_Main)
     boolean isTempExceeded = 0;
     uint8_t RF_ChangeByte;
     uint8_t Thresold_X_Y_Z = 0x10;
-    uint8_t tempHigh;
-    uint8_t tempLow;
 
-    #ifdef DEBUG_M24LR04E_R
-    
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,RF_Change_Reset);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 13);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+1;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 4);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+2;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 16);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+3;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 15);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+4;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC+5;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 0);
-    
-    tempMax = 15;
-    tempHigh = (uint8_t) (((int16_t)(tempMax*4) & 0xFFFC) /4);
-    tempLow = (uint8_t) (((int16_t)(tempMax*4) & 0x03) << 6);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_TEMP_LIMITS;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,tempHigh);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_TEMP_LIMITS+1;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,tempLow);
-    
-    subAddress.LongNb = M24LR16_EEPROM_ADDRESS_ACCEL_THRESOLD_X_Y_Z;
-    M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0x10);
-    
-    subAddress.LongNb = 0;
-    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-
-    #endif
-    
     // Init peripherals
     emc1001_init();
     M24LR04E_Init();
@@ -172,59 +124,12 @@ TASK(TASK_Main)
 
     // Start RTCC
     StartRTCC(configBytes.DateTime);
-
-    // DEBUG
-    /*
-    Xacc.LongNb = 0xA051;
-    Yacc.LongNb = 0xA052;
-    Zacc.LongNb = 0xA053;
-    Acc_event = 0x01;
-    FXLS8471QSaveNdefMessage( Xacc,  Yacc,  Zacc,  Acc_event);
-    subAddress.LongNb = 0;
-    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-    */
-    
-    /*
-    //strcpypgm2ram(str, "Aest 1: est-ce que ca marche??");
-    M24LR04E_SaveNdefMessage(data, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
-
-    strcpypgm2ram(str, "Best 2: Oui ca a marcheeee!");
-    //M24LR04E_SaveNdefMessage(str, "en", &My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
-    
-    
-    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress, 70, value);
-    */
-    
-    /*
-    ReadTemperatureSTTS751(&data);
-    data.temp.LongNb=0b1111111110000000;
-    tempMax = ConvertTemperatureSTTS751(data.temp);
-    */
-    
-    /*
-    // Read Date and time from e²p memory
-    address.LongNb = M24LR16_EEPROM_ADDRESS_DATE_RTC;
-    M24LR04E_ReadBuffer(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, address,6,DateTime);
-    // Convert the array DateTime in BCD
-    convertchartoBCD(DateTime, 6);
-    */
-    
-    // END DEBUG
-    
-    #ifdef DEBUG_M24LR04E_R
-    temperatureIntTo8.LongNb = 0b1111111100000000;
-    
-    EMC1001SaveNdefMessage(temperatureIntTo8);
-    EMC1001SaveNdefMessage(temperatureIntTo8);
-    EMC1001SaveNdefMessage(temperatureIntTo8);
-    
-    #endif
-    
+      
     while (1)
     {
         WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
-        
+
         // RTCC EVENT
         if (TASK_Main_event & RTCC_EVENT)
         {
@@ -234,24 +139,25 @@ TASK(TASK_Main)
                 if (!isMemoryFull){
                     if (statusPackage == ColisDown)
                     {
-                        LedGreen = 0;
                         LedRed = 1;
-                        Delay_ms(100);
-                        LedRed = 0;
-                    } else if (statusPackage == ColisUP)
+                        TMR1H=0xF9;
+                        TMR1L=0xA4;
+                        T1CONbits.TMR1ON=1; // Enables Timer1
+                    } else
+                        if (statusPackage == ColisUP)
                     {
-                        LedRed = 0;
                         LedGreen = 1;
-                        Delay_ms(100);
-                        LedGreen = 0;
+                        TMR1H=0xF9;
+                        TMR1L=0xA4;
+                        T1CONbits.TMR1ON=1; // Enables Timer1*/
                     }
                 }
                 else { // E²p memory is full!!! The led blink in orange
                     LedGreen = 1;
                     LedRed = 1;
-                    Delay_ms(100);
-                    LedGreen = 0;
-                    LedRed = 0;
+                    TMR1H=0xF9;
+                    TMR1L=0xA4;
+                    T1CONbits.TMR1ON=0x01; // Enables Timer1
                 }
             }
             
@@ -313,8 +219,7 @@ TASK(TASK_Main)
                         SetStatusPackageDown (&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS);
                     }
                 }
-                else {
-                    if (temperatureFloat < tempMax){
+                else if (temperatureFloat < tempMax){
                         isTempExceeded = 0;
                         EMC1001SaveNdefMessage(temperatureIntTo8);
                     }
@@ -348,26 +253,9 @@ TASK(TASK_Main)
         OSCCONbits.IDLEN = 0; // Not in Idle
         WDTCONbits.REGSLP=1; // Regulator Low power
         Sleep();
+        
     }//Fin while WaitEvent
 
 }
-
-/**********************************************************************
- * Generic routine to create a delay of many milliseconds.
- *
- * @param  delay     IN  time to wait in ms
- * @return void
- **********************************************************************/
-void Delay_ms(unsigned int delay)
-{
-    CancelAlarm(ALARM_TASK_Main_Delay);
-    SetRelAlarm(ALARM_TASK_Main_Delay, delay, 0);
-    WaitEvent(DELAY_EVENT);
-    GetEvent(TASK_Main_ID, &TASK_Main_event);
-    if (TASK_Main_event & DELAY_EVENT)
-        ClearEvent(DELAY_EVENT);
-    return;
-}    
-
 
 /* End of File : TASK_Main.c */

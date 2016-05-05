@@ -160,6 +160,13 @@ void PIN_MANAGER_Initialize(void)
     TRISLedGreen=0;LedGreen=0;
     TRISLedRed=0;LedRed=0;
     
+    //Timer1 -> blink the led
+    T1CONbits.TMR1CS=0x02; // Timer clock source is the T1OSC
+    T1CONbits.T1SYNC=0x01; // Do not synchronize external clock input
+    T1CONbits.T1OSCEN=0x01; // Power up the Timer1 crystal driver and supply the Timer1 clock from the crystal output
+    PIE1bits.TMR1IE=1; //Enable interruption
+    
+    
     //*****************************************
     //************* Intrerruption *************
     //*****************************************

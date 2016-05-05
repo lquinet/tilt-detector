@@ -119,6 +119,15 @@ void InterruptVectorL(void)
         SetEvent(TASK_Main_ID, ACCEL_EVENT);
         INTCONbits.INT0IF=0;
     }
+    
+    //LED
+	if (PIR1bits.TMR1IF)
+    {
+        PIR1bits.TMR1IF=0;
+        T1CONbits.TMR1ON=0; // Disable Timer1
+        LedGreen = 0;
+        LedRed= 0;
+    }
 
     // I2C
 	if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
