@@ -49,6 +49,7 @@
 #include "drivers/drv_i2c.h"
 #include "drivers/drv_rs.h"
 #include "user.h"
+#include <rtcc.h>
 
 
 /**********************************************************************
@@ -56,6 +57,7 @@
  **********************************************************************/
 extern unsigned char stack_low, stack_high;
 extern void AddOneTick(void);
+
 void InterruptVectorL(void);
 void InterruptVectorH(void);
 
@@ -103,17 +105,48 @@ void InterruptVectorL(void)
     //******************************************************
     /*Here is the next interrupts you want to manage */
     //************************************************
+    
+    // RTCC
+    if ((PIR3bits.RTCCIF)&(PIE3bits.RTCCIE))
+    {
+        mRtcc_Clear_Intr_Status_Bit; //clears the RTCC interrupt status bit
+        SetEvent(TASK_Main_ID, RTCC_EVENT);
+    }
+	
+	//Accelerometer
+	if (INTCONbits.INT0IF)
+    {
+        SetEvent(TASK_Main_ID, ACCEL_EVENT);
+        INTCONbits.INT0IF=0;
+    }
+    
+    //LED
+	if (PIR1bits.TMR1IF)
+    {
+        PIR1bits.TMR1IF=0;
+        T1CONbits.TMR1ON=0; // Disable Timer1
+        LedGreen = 0;
+        LedRed= 0;
+    }
 
-    if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
-        (PIR1bits.SSPIF == 1)) // Check I2C interrupt	(bit3)
+    // I2C
+	if ((PIR2bits.BCLIF == 1) || // Check bus collision(bit3)
+        (PIR1bits.SSPIF == 1 && PIE1bits.SSP1IE)) // Check I2C interrupt	(bit3)
     {
         I2C_INT();
     }
+    
+    // RS232
     if ((PIR1bits.RCIF)&(PIE1bits.RCIE))
         RS_RX_INT();
     if ((PIR1bits.TXIF)&(PIE1bits.TXIE))
         RS_TX_INT();
-
+    
+    // INT1
+    if (INTCON3bits.INT1IF & INTCON3bits.INT1IE){
+        INTCON3bits.INT1IF = 0;
+        SetEvent(TASK_Main_ID, M24LR04E_EVENT);
+    }
     LeaveISR();
     RESTORE_TASK_CTX;
 }

@@ -89,17 +89,18 @@ Counter Counter_kernel =
   };
 
 AlarmObject Alarm_list[] = 
- { /*******************************************************************
-    * ------------------------  TASK_Main     -------------------------
+ { 
+    /*******************************************************************
+    * ----------------- ALARM_TASK_Main_Delay -------------------------
     *******************************************************************/
    {
-     OFF,                                  /* State                   */
-     0,                                    /* AlarmValue              */
-     0,                                    /* Cycle                   */
-     &Counter_kernel,                      /* ptrCounter              */
-     TASK_Main_ID,                         /* TaskID2Activate         */
-     ALARM_EVENT,                          /* EventToPost             */
-     0                                     /* CallBack                */
+     OFF,                                  	/* State                   */
+     0,                                    	/* AlarmValue              */
+     0,                                    	/* Cycle                   */
+     &Counter_kernel,                      	/* ptrCounter              */
+     TASK_Main_ID,                          /* TaskID2Activate         */
+     DELAY_EVENT,                        	/* EventToPost             */
+     0                                     	/* CallBack                */
    },
    
    /*******************************************************************

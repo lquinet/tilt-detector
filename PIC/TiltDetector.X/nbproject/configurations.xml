@@ -8,10 +8,18 @@
       <itemPath>../drivers/drv_i2c.h</itemPath>
       <itemPath>../drivers/drv_rs.h</itemPath>
       <itemPath>../user.h</itemPath>
+      <itemPath>../NDEF/NDEFMessage.h</itemPath>
+      <itemPath>../NDEF/NDEFRecord.h</itemPath>
+      <itemPath>../RTCC/MyRTCC.h</itemPath>
+      <itemPath>../sensors/EMC1001.h</itemPath>
+      <itemPath>../sensors/FXLS8471Q.h</itemPath>
+      <itemPath>../sensors/FXLS8471Q_registers.h</itemPath>
+      <itemPath>../sensors/M24LR04E_R.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
                    projectFiles="true">
+      <itemPath>../Linker/18f46j50.lkr</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -23,6 +31,12 @@
       <itemPath>../Kernel/int_man.c</itemPath>
       <itemPath>../drivers/drv_i2c.c</itemPath>
       <itemPath>../drivers/drv_rs.c</itemPath>
+      <itemPath>../NDEF/NDEFMessage.c</itemPath>
+      <itemPath>../NDEF/NDEFRecord.c</itemPath>
+      <itemPath>../RTCC/MyRTCC.c</itemPath>
+      <itemPath>../sensors/EMC1001.c</itemPath>
+      <itemPath>../sensors/FXLS8471Q.c</itemPath>
+      <itemPath>../sensors/M24LR04E_R.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

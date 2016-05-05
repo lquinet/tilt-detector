@@ -81,7 +81,7 @@
 #pragma config WPDIS = OFF      // Write Protect Disable bit (WPFP<5:0>/WPEND region ignored)
 
 #include "define.h"
-
+#include "user.h"
 
 /**********************************************************************
  * Definition dedicated to the local functions.
@@ -147,7 +147,26 @@ void PIN_MANAGER_Initialize(void)
     //Set all analog input as digital input.
     ANCON0=0xFF ; //Enable AN0-AN7 in Digital mode
     ANCON1=0x7F ; //Enable AN8-AN15 in Digital mode
+    
+    //Configure accelerometer pin
+    TRISBbits.TRISB0=1;
+    
+    //Configure INT0 on RB0
+    INTCON2bits.INTEDG0=1;// Rising edge on
+    INTCON2bits.RBPU=0; // PORTB Pull-up are disabled
+    INTCON2bits.RBIP=0; // RB port change interrupt in LOW priority
 
+    // I/O PORTS
+    TRISLedGreen=0;LedGreen=0;
+    TRISLedRed=0;LedRed=0;
+    
+    //Timer1 -> blink the led
+    T1CONbits.TMR1CS=0x02; // Timer clock source is the T1OSC
+    T1CONbits.T1SYNC=0x01; // Do not synchronize external clock input
+    T1CONbits.T1OSCEN=0x01; // Power up the Timer1 crystal driver and supply the Timer1 clock from the crystal output
+    PIE1bits.TMR1IE=1; //Enable interruption
+    
+    
     //*****************************************
     //************* Intrerruption *************
     //*****************************************
