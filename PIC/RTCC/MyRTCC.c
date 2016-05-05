@@ -18,7 +18,11 @@ void RTCC_configure(unsigned char value[])
     RtccInitClock(); //turn on clock source
     RtccWrOn(); //write enable the rtcc registers
     mRtccSetClockOe(0); //desable RTCC output on RTCC output pin
+    
+#ifndef DEBUG_RTCC
     PIE3bits.RTCCIE=1; // enable RTCC interrupt
+#endif
+
    /// mRtccSetInt();
     //Set Date and time using global structures defined in libraries
     // WARNING: time in BCD format!!!

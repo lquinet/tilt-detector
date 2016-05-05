@@ -104,11 +104,9 @@ TASK(TASK_Main)
 
     #ifdef DEBUG_M24LR04E_R
     
-    /*
+    
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_STATUS_PACKAGE;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,0);
-    statusPackage = M24LR04E_ReadOneByte(&My_I2C_Message, M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress);
-     * */
     
     subAddress.LongNb = M24LR16_EEPROM_ADDRESS_RF_CHANGE;
     M24LR04E_WriteByte(&My_I2C_Message,M24LR16_EEPROM_I2C_SLAVE_ADDRESS, subAddress,RF_Change_Reset);
@@ -240,8 +238,7 @@ TASK(TASK_Main)
                         LedRed = 1;
                         Delay_ms(100);
                         LedRed = 0;
-                    } else
-                        if (statusPackage == ColisUP)
+                    } else if (statusPackage == ColisUP)
                     {
                         LedRed = 0;
                         LedGreen = 1;

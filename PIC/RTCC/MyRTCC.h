@@ -8,6 +8,8 @@
 #ifndef MYRTCC_H
 #define	MYRTCC_H
 
+//#define DEBUG_RTCC
+
 #include "../user.h"
 #include <rtcc.h>
 #include  <dpslp.h> // Pour librairie rtcc.h

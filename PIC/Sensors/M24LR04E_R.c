@@ -177,7 +177,7 @@ void M24LR04E_ReadConfigurationBytes(_ConfigBytes_t *configBytesStruct)
         configBytesStruct->YaccMax.Nb8_B[0] = configurationBytes[15];
         configBytesStruct->ZaccMax.Nb8_B[1] = configurationBytes[16];
         configBytesStruct->ZaccMax.Nb8_B[0] = configurationBytes[17];
-        configBytesStruct->Thresold_X_Y_Z = configurationBytes[17];
+        configBytesStruct->Thresold_X_Y_Z = configurationBytes[18];
         
         // Temperature limits
         temperatureIntTo8.Nb8_B[1] = configurationBytes[20];
