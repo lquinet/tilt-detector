@@ -127,6 +127,7 @@ void InterruptVectorL(void)
         T1CONbits.TMR1ON=0; // Disable Timer1
         LedGreen = 0;
         LedRed= 0;
+        SetEvent(TASK_Main_ID, LED_EVENT);
     }
 
     // I2C
