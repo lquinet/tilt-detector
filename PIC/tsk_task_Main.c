@@ -127,13 +127,9 @@ TASK(TASK_Main)
       
     while (1)
     {
-        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT |LED_EVENT);
+        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
         
-        if (TASK_Main_event & LED_EVENT)
-        {
-            ClearEvent(LED_EVENT);
-        }
         // RTCC EVENT
         if (TASK_Main_event & RTCC_EVENT)
         {
