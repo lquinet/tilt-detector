@@ -71,10 +71,13 @@
 #define TIMEOUT_EVENT       0x08
 
 //TASK Main
-#define DELAY_EVENT       	0x02
-#define RTCC_EVENT          0x22
-#define M24LR04E_EVENT      0x04
-#define ACCEL_EVENT       	0x40
+// /!\ ID must be a multiple of 2 (0, 1, 2, 4, 8, 16, 32, 64 and 128) else there is a bug! 
+// (see Event Management in PICos18 v 2.xx API documentation)
+#define DELAY_EVENT       	0x00
+#define RTCC_EVENT          0x01
+#define M24LR04E_EVENT      0x02
+#define ACCEL_EVENT       	0x04
+#define TIMER1_EVENT        0x08
 
 //DRV_RS
 #define RS_NEW_MSG          0x10
