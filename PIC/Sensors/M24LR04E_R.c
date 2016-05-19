@@ -313,6 +313,7 @@ StatusType M24LR04E_WriteNBytes(I2C_message_t *MemMsg, uint8_t address, IntTo8_t
 }
 
 /**********************************************************************
+ * /!\ NOT USED ANYMORE /!\
  * Save a new NDEF message that contain the datetime and temperature or acceleration.
  * The NDEFMessage is contained in the _NdefRecord_t structure,and we'll cross the memory 
  * of this structure to send the frame to the e²p.

@@ -60,8 +60,8 @@ void NdefMessageAddRecord(uint8_t *payloadArray, boolean isFirstRecord)
  * If the type of the message is for temperature, the payload contain the datetime and the temperature.
  * 
  * @param  *payloadArray     payload (in an array) to store in NDEF message
- * @param  data         structure which contains the data to store in the payload      
- * @return Status       None
+ * @param  data             structure which contains the data to store in the payload      
+ * @return Status           None
  **********************************************************************/
 
 void BuildMessage(uint8_t *payloadArray, NDEFPayload_t data){
@@ -178,6 +178,7 @@ StatusType M24LR04E_SaveNdefRecord(NDEFPayload_t data, I2C_message_t *MemMsg, ui
     // Building of a string from the structure NDEFPayload_t
     BuildMessage(payloadArray, data);
     
+    // If first Record
     if (lastSubAddressWrited.LongNb == 0x08) {
         // Creation of the NDEF message in NdefRecord structure
         // The record header is different if this is the first record or not
@@ -264,11 +265,13 @@ void M24LR04E_SetTLV_Block (I2C_message_t *MemMsg, uint8_t address, boolean isFi
         subAddress.LongNb = 0x04;
         M24LR04E_WriteByte(MemMsg, address, subAddress, TLV_TAG);
     }
+    
     // Writing of the TLV Length
     // TLV_Length = the record Length
     TLV_Length.LongNb += NdefRecord._recordLength;
     
-    TLV_Block[0] = 0xFF; // 3 bytes format
+    // TLV_Length in 3 bytes format
+    TLV_Block[0] = 0xFF; 
     TLV_Block[1] = TLV_Length.Nb8_B[1]; // byte high
     TLV_Block[2] = TLV_Length.Nb8_B[0]; // Byte low
 
@@ -299,6 +302,7 @@ StatusType M24LR04E_SaveCC(I2C_message_t *MemMsg, uint8_t address)
 }
 
 /**********************************************************************
+ * /!\ NOT USED ANYMORE /!\
  * Concatenate the data to send by NDEF in the payload, with the terminator at the end
  * Don't use strcat because there are no '\0' at the end of the string (impossible because the data can contain
  * null bytes!)
