@@ -76,7 +76,6 @@
 #define M24LR04E_EVENT      0x04
 #define ACCEL_EVENT       	0x40
 
-
 //DRV_RS
 #define RS_NEW_MSG          0x10
 #define RS_RCV_MSG          0x20

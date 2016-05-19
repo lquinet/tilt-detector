@@ -129,7 +129,7 @@ TASK(TASK_Main)
     {
         WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
-
+        
         // RTCC EVENT
         if (TASK_Main_event & RTCC_EVENT)
         {
@@ -225,7 +225,7 @@ TASK(TASK_Main)
                     }
                 }
                 
-            } 
+            
             
             // Write DateTime to e²p every 10 min
             if (counterRTCC == 600) {
@@ -248,7 +248,6 @@ TASK(TASK_Main)
 			ClearEvent(ACCEL_EVENT);
 			fxls8471q_checkSourceInterrupt();
         }
-
         //Configure Sleep Mode
         OSCCONbits.IDLEN = 0; // Not in Idle
         WDTCONbits.REGSLP=1; // Regulator Low power
