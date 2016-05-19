@@ -120,14 +120,15 @@ void InterruptVectorL(void)
         INTCONbits.INT0IF=0;
     }
     
-    //LED
+    //LED (timer1)
 	if (PIR1bits.TMR1IF)
     {
         PIR1bits.TMR1IF=0;
         T1CONbits.TMR1ON=0; // Disable Timer1
         LedGreen = 0;
         LedRed= 0;
-        Sleep();
+        SetEvent(TASK_Main_ID, TIMER1_EVENT);
+        //Sleep();
     }
 
     // I2C

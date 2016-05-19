@@ -127,8 +127,9 @@ TASK(TASK_Main)
       
     while (1)
     {
-        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT);
+        WaitEvent(RTCC_EVENT | M24LR04E_EVENT| ACCEL_EVENT |TIMER1_EVENT);
         GetEvent(TASK_Main_ID, &TASK_Main_event);
+           
         
         // RTCC EVENT
         if (TASK_Main_event & RTCC_EVENT)
@@ -143,6 +144,8 @@ TASK(TASK_Main)
                         TMR1H=0xF9;
                         TMR1L=0xA4;
                         T1CONbits.TMR1ON=1; // Enables Timer1
+                        //TRISCbits.TRISC2 = 0;
+                        //PORTCbits.RC2 = 1;
                     } else
                         if (statusPackage == ColisUP)
                     {
@@ -248,6 +251,12 @@ TASK(TASK_Main)
 			ClearEvent(ACCEL_EVENT);
 			fxls8471q_checkSourceInterrupt();
         }
+        // TIMER1_EVENT
+        if (TASK_Main_event & TIMER1_EVENT){
+            ClearEvent(TIMER1_EVENT );
+            //PORTCbits.RC2 = 0;
+        }
+        
         //Configure Sleep Mode
         OSCCONbits.IDLEN = 0; // Not in Idle
         WDTCONbits.REGSLP=1; // Regulator Low power
