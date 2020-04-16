@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.test.mike.testappnfc8.MainActivity">
+
+    <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:background="@drawable/configdev" android:id="@+id/ivBanner_menu"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clean Events"
+        android:id="@+id/btnReset"
+        android:layout_marginTop="130dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Config"
+        android:id="@+id/btnConf"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/btnReset"
+        android:layout_marginTop="80dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Write Block"
+        android:id="@+id/btnWriteBlock"
+        android:layout_below="@+id/btnReset"
+        android:layout_marginLeft="230dp"
+        android:layout_marginTop="260dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Read Block"
+        android:id="@+id/btnReadBlock"
+        android:layout_marginTop="260dp"
+        android:layout_below="@+id/btnReset"
+        android:layout_marginLeft="30dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UID"
+        android:id="@+id/btnUID"
+        android:layout_marginTop="310dp"
+        android:layout_below="@+id/btnReset"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

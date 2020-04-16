@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context="com.test.mike.testappnfc8.MainActivity">
+
+    <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:background="@drawable/background" android:id="@+id/ivBanner_menu"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan"
+        android:id="@+id/btnScan"
+        android:layout_marginTop="160dp"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Advance menu"
+        android:id="@+id/btnAdvance"
+        android:layout_marginTop="80dp"
+        android:layout_below="@+id/btnScan"
+        android:layout_centerHorizontal="true" />
+
+
+
+
+</RelativeLayout>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:background="@drawable/normal" android:id="@+id/ivBanner_menu"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:id="@+id/lyWrite" android:layout_alignParentTop="true" android:layout_marginTop="15dp">
+
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="Block"
+            android:textSize="20dp" android:layout_marginRight="50dp"
+            android:textColor="#FFFFFF"/>
+
+        <EditText android:layout_width="wrap_content" android:id="@+id/etBlock"
+            android:layout_height="wrap_content" android:text=""
+            android:singleLine="true" android:maxLength="4" android:hint="0000"
+            android:layout_marginLeft="50dp" android:imeOptions="actionDone" android:inputType ="number"
+            android:textColor="#FFFFFF" android:theme="@style/ThemeEditTextLight"/>
+    </LinearLayout>
+
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_below="@+id/lyWrite">
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="Value"
+            android:textSize="20dp" android:gravity="center"
+            android:layout_marginRight="30dp" android:textColor="#FFFFFF"/>
+        <EditText android:layout_width="wrap_content" android:id="@+id/etvalue1"
+            android:layout_height="wrap_content" android:text=""
+            android:singleLine="true" android:maxLength="2" android:hint="00" android:theme="@style/ThemeEditTextLight"
+            android:layout_marginLeft="10dp" android:imeOptions="actionDone" android:inputType ="number" />
+        <EditText android:layout_width="wrap_content" android:id="@+id/etvalue2"
+            android:layout_height="wrap_content" android:text=""
+            android:singleLine="true" android:maxLength="2" android:hint="00" android:theme="@style/ThemeEditTextLight"
+            android:layout_marginLeft="10dp" android:imeOptions="actionDone" android:inputType ="number" />
+        <EditText android:layout_width="wrap_content" android:id="@+id/etvalue3"
+            android:layout_height="wrap_content" android:text=""
+            android:singleLine="true" android:maxLength="2" android:hint="00" android:theme="@style/ThemeEditTextLight"
+            android:layout_marginLeft="10dp" android:imeOptions="actionDone" android:inputType ="number" />
+        <EditText android:layout_width="wrap_content" android:id="@+id/etvalue4"
+            android:layout_height="wrap_content"
+            android:singleLine="true" android:maxLength="2" android:hint="00" android:theme="@style/ThemeEditTextLight"
+            android:layout_marginLeft="10dp" android:imeOptions="actionDone" android:inputType ="number" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/llWriteRead" android:orientation="horizontal"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" android:layout_marginBottom = "20dp">
+
+        <Button android:layout_width="wrap_content" android:id="@+id/button_clear"
+            android:layout_height="wrap_content" android:text="Clear"
+            android:layout_weight="1" android:layout_marginLeft = "10dp"/>
+
+        <Button android:layout_width="wrap_content" android:id="@+id/button_writing"
+            android:layout_weight="1" android:layout_height="wrap_content"
+            android:text="Write" android:layout_marginLeft = "10dp" />
+    </LinearLayout>
+
+</RelativeLayout>

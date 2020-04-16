@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:background="@drawable/setting" android:id="@+id/ivBanner_menu"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView android:id="@+id/th" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="Threshold (mg) :" android:layout_marginLeft="15dp"
+        android:textColor="#FFFFFF" android:layout_marginTop="120dp"/>
+
+    <EditText
+        android:id="@+id/edtth" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:imeOptions="actionDone" android:inputType="number" android:hint="0000"
+        android:maxLength="4" android:theme="@style/ThemeEditTextLight"
+        android:textColor="#FFFFFF"
+        android:layout_alignBaseline="@+id/th"
+        android:layout_alignBottom="@+id/th"
+        android:layout_alignEnd="@+id/tempmin"
+        android:layout_marginEnd="11dp" />
+
+
+
+    <TextView android:id="@+id/tempmin" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="Température minimum (°C):"
+        android:textColor="#FFFFFF" android:layout_marginTop="30dp"
+        android:layout_below="@+id/th"
+        android:layout_alignStart="@+id/th" />
+
+    <EditText
+        android:id="@+id/edttempmin" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:imeOptions="actionDone" android:inputType="number" android:hint="000" android:layout_marginLeft="80dp"
+        android:maxLength="3" android:theme="@style/ThemeEditTextLight" android:layout_marginTop="20dp"
+        android:layout_below="@+id/th" android:layout_alignStart="@+id/edtth" android:textColor="#FFFFFF"
+        android:layout_alignBaseline="@+id/tempmin"/>
+
+    <TextView android:id="@+id/tempmax" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Température maximum (°C):" android:layout_marginLeft="15dp"
+        android:textColor="#FFFFFF" android:layout_marginTop="35dp" android:layout_below="@+id/tempmin"/>
+
+    <EditText
+        android:id="@+id/edttempmax" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:imeOptions="actionDone" android:inputType="number" android:hint="000" android:layout_marginLeft="0dp"
+        android:maxLength="3" android:theme="@style/ThemeEditTextLight" android:layout_marginTop="13dp"
+        android:layout_below="@+id/edttempmin" android:layout_alignStart="@+id/edttempmin" android:textColor="#FFFFFF"
+        android:layout_alignBaseline="@+id/tempmax"/>
+
+
+    <Button
+        android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apply"
+        android:id="@+id/btnApply" android:layout_alignParentBottom="true"
+        android:layout_marginBottom="39dp" android:layout_centerHorizontal="true"/>
+
+
+</RelativeLayout>

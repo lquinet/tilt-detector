@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.test.mike.testappnfc8.MainActivity">
+
+    <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:background="@drawable/info" android:id="@+id/ivBanner_menu"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UID : "
+        android:id="@+id/lblUID"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="115dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Manufacturer :"
+        android:id="@+id/lblManufacturer"
+        android:layout_below="@+id/lblUID"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Product Name :"
+        android:id="@+id/lblProductName"
+        android:layout_below="@+id/lblManufacturer"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Techno :"
+        android:id="@+id/lblTechno"
+        android:layout_below="@+id/lblProductName"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DSFID :"
+        android:id="@+id/lblDSFID"
+        android:layout_below="@+id/lblTechno"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AFI :"
+        android:id="@+id/lblAFI"
+        android:layout_below="@+id/lblDSFID"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Memory size :"
+        android:id="@+id/lblMemoSize"
+        android:layout_below="@+id/lblAFI"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Number block :"
+        android:id="@+id/lblNumberBlock"
+        android:layout_below="@+id/lblMemoSize"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reference :"
+        android:id="@+id/lblRef"
+        android:layout_below="@+id/lblNumberBlock"
+        android:layout_alignParentStart="true"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/uid"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/manufacturer"
+        android:textColor="#FFFFFF" android:layout_marginTop="120dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/manufacturer"
+        android:layout_below="@+id/uid"
+        android:layout_toEndOf="@+id/lblProductName"
+        android:layout_marginStart="20dp"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/product_name"
+        android:layout_below="@+id/manufacturer"
+        android:layout_alignStart="@+id/manufacturer"
+        android:layout_toRightOf ="@id/lblProductName"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/techno"
+        android:layout_below="@+id/product_name"
+        android:layout_alignStart="@+id/product_name"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/dsfid"
+        android:layout_alignTop="@+id/lblDSFID"
+        android:layout_alignStart="@+id/techno"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/afi"
+        android:layout_below="@+id/dsfid"
+        android:layout_alignStart="@+id/dsfid"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/memory_size"
+        android:layout_below="@+id/afi"
+        android:layout_alignStart="@+id/afi"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/number_block"
+        android:layout_alignBaseline="@+id/lblNumberBlock"
+        android:layout_alignBottom="@+id/lblNumberBlock"
+        android:layout_alignStart="@+id/memory_size"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ref"
+        android:layout_below="@+id/number_block"
+        android:layout_alignStart="@+id/number_block"
+        android:textColor="#FFFFFF" android:layout_marginTop="5dp"/>
+
+</RelativeLayout>
